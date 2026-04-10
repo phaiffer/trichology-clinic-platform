@@ -1,15 +1,19 @@
 package com.phaiffer.clinic.modules.scoring.application.dto;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public record ScoreResultResponse(
         UUID id,
         UUID patientId,
-        String scoreType,
-        Double scoreValue,
+        String patientName,
+        UUID anamnesisRecordId,
+        String anamnesisTemplateName,
+        Double totalScore,
         String classification,
-        String interpretation,
-        Instant calculatedAt
+        String summary,
+        Instant calculatedAt,
+        List<ScoreResultItemResponse> items
 ) {
 }

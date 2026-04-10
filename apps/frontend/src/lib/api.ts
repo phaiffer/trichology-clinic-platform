@@ -259,7 +259,26 @@ export async function deletePatientPhoto(
 }
 
 export async function getPatientScoreResults(patientId: string): Promise<ScoreResult[]> {
-  return apiRequest<ScoreResult[]>(`/patients/${patientId}/score-results`);
+  return apiRequest<ScoreResult[]>(`/patients/${patientId}/scores`);
+}
+
+export async function getPatientScoreResult(
+  patientId: string,
+  scoreId: string,
+): Promise<ScoreResult> {
+  return apiRequest<ScoreResult>(`/patients/${patientId}/scores/${scoreId}`);
+}
+
+export async function createPatientScoreResult(
+  patientId: string,
+  recordId: string,
+): Promise<ScoreResult> {
+  return apiRequest<ScoreResult>(
+    `/patients/${patientId}/anamnesis-records/${recordId}/scores`,
+    {
+      method: "POST",
+    },
+  );
 }
 
 export async function getPatientReports(

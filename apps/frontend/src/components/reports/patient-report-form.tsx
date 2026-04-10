@@ -191,7 +191,8 @@ export function PatientReportForm({
               <option value="">No score result selected</option>
               {scoreResults.map((score) => (
                 <option key={score.id} value={score.id}>
-                  {score.scoreType} • {score.scoreValue.toFixed(2)}
+                  {score.anamnesisTemplateName || "Legacy score"} •{" "}
+                  {score.totalScore.toFixed(2)}
                   {score.classification ? ` • ${score.classification}` : ""}
                 </option>
               ))}

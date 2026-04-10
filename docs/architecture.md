@@ -26,7 +26,7 @@ This gives a clean upgrade path to stricter hexagonal boundaries later without i
 - `patient`: implemented vertical slice with CRUD, search, pagination, and email uniqueness checks
 - `anamnesis`: implemented template and patient record foundation
 - `media`: implemented patient photo metadata, local storage abstraction, upload, listing, detail, file serving, and delete flow
-- `scoring`: read-only patient score result listing foundation
+- `scoring`: implemented anamnesis-driven score calculation, persistence, history, and detail flow
 - `report`: implemented patient report metadata, local PDF generation, storage, file serving, and delete flow
 
 ## Frontend Style
@@ -53,13 +53,14 @@ The frontend uses the Next.js App Router with:
 - `/patients/[id]/photos/compare`: patient before/after side-by-side comparison
 - `/patients/[id]/anamnesis/new`: dynamic patient anamnesis entry
 - `/patients/[id]/anamnesis/[recordId]`: submitted patient anamnesis record view
+- `/patients/[id]/scores/[scoreId]`: stored patient score detail view
 - `/patients/[id]/reports/new`: patient report generation flow
 - `/patients/[id]/reports/[reportId]`: patient report detail view
 - `/anamnesis`: anamnesis template list
 - `/anamnesis/templates/new`: anamnesis template creation
 - `/anamnesis/templates/[id]`: anamnesis template details
 - `/photos`: photo module overview
-- `/scoring`: placeholder landing page, with score data now exposed through patient APIs
+- `/scoring`: placeholder landing page, with real score workflows exposed through patient APIs and patient routes
 - `/reports`: simple patient-first reports landing page
 - `/reminders`: placeholder
 
@@ -161,14 +162,31 @@ Current limitations inside the media slice:
 
 ## Scoring Module Design Notes
 
-The scoring module is still intentionally narrow in this step.
+The scoring module now sits directly on top of anamnesis submissions instead of
+introducing a separate scoring engine abstraction.
 
 Current design choices:
 
-- score results are patient-owned records
-- score results are currently exposed as read-only API data for report assembly
-- score classification is stored explicitly so the report can present a clinician-friendly label
-- score creation and calculation flows are still intentionally deferred
+- one score result belongs to one patient and one anamnesis record
+- recalculating from the same record creates a new stored result, preserving history
+- score results store total score, classification, summary, and itemized contributions
+- itemized contributions are persisted so later template edits do not rewrite historical results
+- score classification is derived from configurable backend thresholds
+- report generation keeps linking to one stored score result and now validates the score/anamnesis pairing when both are selected
+
+Current MVP scoring rules:
+
+- `BOOLEAN`: `true` contributes the configured question weight; `false` contributes zero
+- `SINGLE_CHOICE`: selected option score multiplied by question weight when present
+- `MULTIPLE_CHOICE`: sum of selected option scores multiplied by question weight when present
+- `NUMBER`: numeric answer multiplied by question weight when configured
+- `TEXT`, `TEXTAREA`, and `DATE`: ignored for scoring in this step
+
+Template scoring configuration:
+
+- `scoringWeight` remains the existing question-level numeric multiplier
+- choice questions now also support `optionScores`
+- configuration lives inside the anamnesis template itself to avoid a premature scoring subsystem
 
 ## Report Module Design Notes
 
@@ -196,7 +214,7 @@ Current report limitations:
 
 - no versioned templates or report theming yet
 - no browser-side preview renderer beyond opening the file route
-- no score calculation workflow yet, only score selection if stored results exist
+- no score rule versioning or score editing yet
 - no pagination tuning, signature block, or richer branding yet
 
 ## Current Scope Validation
@@ -211,7 +229,7 @@ The current codebase already supports:
 - anamnesis template creation, listing, and details
 - patient anamnesis submission, history, and record viewing
 - patient photo upload, gallery filtering, detail, delete, and before/after comparison
-- patient score result listing by patient
+- patient score calculation from anamnesis, score history, and score detail viewing
 - patient report generation, listing, detail, open/download, and delete
 - dashboard structure for future modules
 
@@ -220,6 +238,6 @@ The current codebase already supports:
 - Add Flyway before production adoption
 - Replace open patient endpoints with authenticated role-based access
 - Introduce object storage adapters for photos
-- Add richer scoring creation and calculation flows
+- Add score rule versioning, richer score editing controls, and audit-ready calculation metadata
 - Add report template versions and presentation refinements
 - Add notification provider abstraction for WhatsApp reminders

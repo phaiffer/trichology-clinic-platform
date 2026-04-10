@@ -8,6 +8,7 @@ import com.phaiffer.clinic.modules.anamnesis.domain.model.AnamnesisRecord;
 import com.phaiffer.clinic.modules.anamnesis.domain.model.AnamnesisTemplate;
 
 import java.util.List;
+import java.util.Map;
 
 public final class AnamnesisMapper {
 
@@ -34,7 +35,8 @@ public final class AnamnesisMapper {
                 question.isRequired(),
                 question.getDisplayOrder(),
                 question.getScoringWeight(),
-                List.copyOf(question.getOptions())
+                List.copyOf(question.getOptions()),
+                Map.copyOf(question.getOptionScores())
         );
     }
 

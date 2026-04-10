@@ -49,3 +49,6 @@ app:
   report:
     storage-root: ${APP_REPORT_STORAGE_ROOT:./storage/reports}
     clinic-title: ${APP_REPORT_CLINIC_TITLE:Phaiffer Tech Trichology Clinic}
+  scoring:
+    moderate-threshold: ${APP_SCORING_MODERATE_THRESHOLD:10}
+    high-threshold: ${APP_SCORING_HIGH_THRESHOLD:20}

@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -65,6 +67,7 @@ public class AnamnesisTemplateService {
         question.setDisplayOrder(request.displayOrder());
         question.setScoringWeight(request.scoringWeight());
         question.setOptions(normalizeOptions(request.options()));
+        question.setOptionScores(normalizeOptionScores(request.optionScores(), question.getOptions()));
         return question;
     }
 
@@ -81,6 +84,11 @@ public class AnamnesisTemplateService {
             if (!choiceType && !options.isEmpty()) {
                 throw new IllegalArgumentException("Only choice-based questions can define options");
             }
+
+            Map<String, Double> optionScores = normalizeOptionScores(question.optionScores(), options);
+            if (!choiceType && !optionScores.isEmpty()) {
+                throw new IllegalArgumentException("Only choice-based questions can define option scores");
+            }
         }
     }
 
@@ -94,5 +102,32 @@ public class AnamnesisTemplateService {
                 .filter(option -> !option.isBlank())
                 .toList();
     }
-}
 
+    private Map<String, Double> normalizeOptionScores(Map<String, Double> optionScores, List<String> options) {
+        if (optionScores == null || optionScores.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<String, Double> normalizedOptionScores = new LinkedHashMap<>();
+        for (Map.Entry<String, Double> entry : optionScores.entrySet()) {
+            String option = entry.getKey() == null ? "" : entry.getKey().trim();
+            Double score = entry.getValue();
+
+            if (option.isBlank()) {
+                throw new IllegalArgumentException("Option score keys cannot be blank");
+            }
+
+            if (score == null) {
+                throw new IllegalArgumentException("Option scores cannot be null");
+            }
+
+            if (!options.contains(option)) {
+                throw new IllegalArgumentException("Option scores must reference declared options");
+            }
+
+            normalizedOptionScores.put(option, score);
+        }
+
+        return normalizedOptionScores;
+    }
+}

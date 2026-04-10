@@ -18,6 +18,11 @@ public class ScoreResultRepositoryAdapter implements ScoreResultRepository {
     }
 
     @Override
+    public ScoreResult save(ScoreResult scoreResult) {
+        return scoreResultJpaRepository.save(scoreResult);
+    }
+
+    @Override
     public List<ScoreResult> findByPatientId(UUID patientId) {
         return scoreResultJpaRepository.findAllByPatientIdOrderByCalculatedAtDesc(patientId);
     }

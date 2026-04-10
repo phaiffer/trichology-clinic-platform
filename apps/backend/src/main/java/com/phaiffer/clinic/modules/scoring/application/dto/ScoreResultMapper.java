@@ -1,6 +1,7 @@
 package com.phaiffer.clinic.modules.scoring.application.dto;
 
 import com.phaiffer.clinic.modules.scoring.domain.model.ScoreResult;
+import com.phaiffer.clinic.modules.scoring.domain.model.ScoreResultItem;
 
 public final class ScoreResultMapper {
 
@@ -11,11 +12,27 @@ public final class ScoreResultMapper {
         return new ScoreResultResponse(
                 scoreResult.getId(),
                 scoreResult.getPatient().getId(),
-                scoreResult.getScoreType(),
-                scoreResult.getScoreValue(),
-                scoreResult.getClassification(),
-                scoreResult.getInterpretation(),
-                scoreResult.getCalculatedAt()
+                scoreResult.getPatient().getFirstName() + " " + scoreResult.getPatient().getLastName(),
+                scoreResult.getAnamnesisRecord() != null ? scoreResult.getAnamnesisRecord().getId() : null,
+                scoreResult.getAnamnesisRecord() != null
+                        ? scoreResult.getAnamnesisRecord().getTemplate().getName()
+                        : scoreResult.getScoreType(),
+                scoreResult.resolveTotalScore(),
+                scoreResult.resolveClassification(),
+                scoreResult.resolveSummary(),
+                scoreResult.getCalculatedAt(),
+                scoreResult.getItems().stream().map(ScoreResultMapper::toItemResponse).toList()
+        );
+    }
+
+    private static ScoreResultItemResponse toItemResponse(ScoreResultItem item) {
+        return new ScoreResultItemResponse(
+                item.getQuestionId(),
+                item.getQuestionLabel(),
+                item.getQuestionType(),
+                item.getAnswerValue(),
+                item.getContribution(),
+                item.getRuleApplied()
         );
     }
 }

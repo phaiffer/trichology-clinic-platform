@@ -11,12 +11,15 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -54,6 +57,12 @@ public class AnamnesisQuestion {
     @OrderColumn(name = "option_order")
     @Column(name = "option_value", nullable = false, length = 255)
     private List<String> options = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "anamnesis_question_option_scores", joinColumns = @JoinColumn(name = "question_id"))
+    @MapKeyColumn(name = "option_value", length = 255)
+    @Column(name = "score_value", nullable = false)
+    private Map<String, Double> optionScores = new LinkedHashMap<>();
 
     public UUID getId() {
         return id;
@@ -122,5 +131,12 @@ public class AnamnesisQuestion {
     public void setOptions(List<String> options) {
         this.options = options;
     }
-}
 
+    public Map<String, Double> getOptionScores() {
+        return optionScores;
+    }
+
+    public void setOptionScores(Map<String, Double> optionScores) {
+        this.optionScores = optionScores;
+    }
+}

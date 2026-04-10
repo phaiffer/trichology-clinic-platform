@@ -8,6 +8,8 @@ import java.util.UUID;
 
 public interface ScoreResultRepository {
 
+    ScoreResult save(ScoreResult scoreResult);
+
     List<ScoreResult> findByPatientId(UUID patientId);
 
     Optional<ScoreResult> findByIdAndPatientId(UUID scoreResultId, UUID patientId);

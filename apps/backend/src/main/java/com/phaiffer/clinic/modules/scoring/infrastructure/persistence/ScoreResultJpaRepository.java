@@ -10,9 +10,9 @@ import java.util.UUID;
 
 public interface ScoreResultJpaRepository extends JpaRepository<ScoreResult, UUID> {
 
-    @EntityGraph(attributePaths = {"patient"})
+    @EntityGraph(attributePaths = {"patient", "anamnesisRecord", "anamnesisRecord.template", "items"})
     List<ScoreResult> findAllByPatientIdOrderByCalculatedAtDesc(UUID patientId);
 
-    @EntityGraph(attributePaths = {"patient"})
+    @EntityGraph(attributePaths = {"patient", "anamnesisRecord", "anamnesisRecord.template", "items"})
     Optional<ScoreResult> findByIdAndPatientId(UUID id, UUID patientId);
 }

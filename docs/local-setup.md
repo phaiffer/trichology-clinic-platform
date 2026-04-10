@@ -41,6 +41,8 @@ Environment variables:
 - `APP_MEDIA_ALLOWED_CONTENT_TYPES`: comma-separated MIME types allowed for upload
 - `APP_REPORT_STORAGE_ROOT`: local storage root for generated PDF reports
 - `APP_REPORT_CLINIC_TITLE`: title rendered in the report header
+- `APP_SCORING_MODERATE_THRESHOLD`: minimum total score for `MODERATE`
+- `APP_SCORING_HIGH_THRESHOLD`: minimum total score for `HIGH`
 
 Example local values are available in:
 
@@ -80,7 +82,7 @@ Example local values are available in:
 - anamnesis template create, list, and get by id
 - patient anamnesis record create, list by patient, and get by id
 - patient photo upload, list, get by id, secure file serving, and delete
-- patient score result list and get by id
+- patient score calculation from anamnesis, history list, and get by id
 - patient PDF report generation, list, metadata detail, file serving, and delete
 - frontend login placeholder page
 - frontend dashboard shell
@@ -100,12 +102,11 @@ Example local values are available in:
 - authentication and authorization are not implemented yet
 - patient deletion is currently hard delete
 - anamnesis does not yet support conditional questions
-- anamnesis does not yet calculate scores
+- scoring rules are intentionally MVP-only and do not yet support versioning or advanced formulas
 - the frontend has no automated tests yet
 - patient photo storage is local filesystem only in this step
 - photo uploads share metadata across all files in the same request
 - no image processing, thumbnail generation, or advanced before/after slider yet
-- score results are read-only in this step
 - first PDF export is implemented, but report theming and template versioning are not
 - WhatsApp integration is still not implemented
 - Flyway is not configured yet
@@ -144,8 +145,9 @@ Example local values are available in:
 
 ## Current Score Endpoints
 
-- `GET /api/patients/{patientId}/score-results`
-- `GET /api/patients/{patientId}/score-results/{scoreResultId}`
+- `POST /api/patients/{patientId}/anamnesis-records/{recordId}/scores`
+- `GET /api/patients/{patientId}/scores`
+- `GET /api/patients/{patientId}/scores/{scoreId}`
 
 ## Current Report Endpoints
 
@@ -198,6 +200,25 @@ Each report is assembled locally from:
 - optional selected score result and its classification
 - selected patient photos and photo notes
 - optional clinician summary entered during report generation
+
+If both an anamnesis record and a score result are selected for the same report,
+the backend validates that the score result was calculated from that anamnesis record.
+
+## Score Calculation Behavior
+
+Each score result is assembled locally from one stored anamnesis record:
+
+- `BOOLEAN`: contributes the question weight for `true`, zero for `false`
+- `SINGLE_CHOICE`: uses configured option score, multiplied by question weight when present
+- `MULTIPLE_CHOICE`: sums configured option scores, multiplied by question weight when present
+- `NUMBER`: uses `answer * questionWeight` when the question weight is configured
+- `TEXT`, `TEXTAREA`, and `DATE`: ignored for scoring in this step
+
+Classification thresholds:
+
+- `LOW`: below `APP_SCORING_MODERATE_THRESHOLD`
+- `MODERATE`: from `APP_SCORING_MODERATE_THRESHOLD` up to `APP_SCORING_HIGH_THRESHOLD`
+- `HIGH`: at or above `APP_SCORING_HIGH_THRESHOLD`
 
 ## PostgreSQL Migration Path
 

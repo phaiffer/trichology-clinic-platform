@@ -24,6 +24,7 @@ function createQuestion(order: number): AnamnesisQuestionInput {
     displayOrder: order,
     scoringWeight: null,
     options: [],
+    optionScores: {},
   };
 }
 
@@ -86,6 +87,11 @@ export function AnamnesisTemplateForm() {
           label: question.label.trim(),
           helperText: question.helperText?.trim() || null,
           options: question.options,
+          optionScores: Object.fromEntries(
+            Object.entries(question.optionScores).filter(([option]) =>
+              question.options.includes(option),
+            ),
+          ),
         })),
       });
 
@@ -210,6 +216,11 @@ export function AnamnesisTemplateForm() {
                             event.target.value === "MULTIPLE_CHOICE"
                               ? current.options
                               : [],
+                          optionScores:
+                            event.target.value === "SINGLE_CHOICE" ||
+                            event.target.value === "MULTIPLE_CHOICE"
+                              ? current.optionScores
+                              : {},
                         }))
                       }
                       className="w-full rounded-2xl border border-brand-100 px-4 py-3 outline-none transition focus:border-brand-500"
@@ -290,12 +301,52 @@ export function AnamnesisTemplateForm() {
                             .split("\n")
                             .map((option) => option.trim())
                             .filter((option) => option.length > 0),
+                          optionScores: Object.fromEntries(
+                            event.target.value
+                              .split("\n")
+                              .map((option) => option.trim())
+                              .filter((option) => option.length > 0)
+                              .map((option) => [
+                                option,
+                                current.optionScores[option] ?? 0,
+                              ]),
+                          ),
                         }))
                       }
                       className="min-h-24 w-full rounded-2xl border border-brand-100 px-4 py-3 outline-none transition focus:border-brand-500"
                       placeholder={"Option A\nOption B"}
                     />
                   </label>
+                ) : null}
+
+                {choiceType && question.options.length > 0 ? (
+                  <div className="mt-4 space-y-3">
+                    <p className="text-sm font-medium text-slate-700">Option scores</p>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      {question.options.map((option) => (
+                        <label key={option} className="block space-y-2">
+                          <span className="text-sm text-slate-600">{option}</span>
+                          <input
+                            type="number"
+                            value={question.optionScores[option] ?? 0}
+                            onChange={(event) =>
+                              updateQuestion(index, (current) => ({
+                                ...current,
+                                optionScores: {
+                                  ...current.optionScores,
+                                  [option]:
+                                    event.target.value === ""
+                                      ? 0
+                                      : Number(event.target.value),
+                                },
+                              }))
+                            }
+                            className="w-full rounded-2xl border border-brand-100 px-4 py-3 outline-none transition focus:border-brand-500"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 ) : null}
               </article>
             );

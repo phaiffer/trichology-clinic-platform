@@ -92,6 +92,7 @@ public class ReportService {
         Patient patient = findPatient(patientId);
         AnamnesisRecord anamnesisRecord = findOptionalAnamnesisRecord(patientId, request.anamnesisRecordId());
         ScoreResult scoreResult = findOptionalScoreResult(patientId, request.scoreResultId());
+        validateReportAssociations(anamnesisRecord, scoreResult);
         List<PatientPhoto> selectedPhotos = findSelectedPhotos(patientId, request.selectedPhotoIds());
         Instant generatedAt = Instant.now();
         String normalizedTitle = normalizeTitle(request.title());
@@ -113,10 +114,10 @@ public class ReportService {
                 anamnesisRecord != null ? anamnesisRecord.getTemplate().getName() : null,
                 anamnesisRecord != null ? anamnesisRecord.getCreatedAt() : null,
                 buildAnswerData(anamnesisRecord),
-                scoreResult != null ? scoreResult.getScoreType() : null,
-                scoreResult != null ? scoreResult.getScoreValue() : null,
-                scoreResult != null ? scoreResult.getClassification() : null,
-                scoreResult != null ? scoreResult.getInterpretation() : null,
+                scoreResult != null ? scoreResultServiceLabel(scoreResult) : null,
+                scoreResult != null ? scoreResult.resolveTotalScore() : null,
+                scoreResult != null ? scoreResult.resolveClassification() : null,
+                scoreResult != null ? scoreResult.resolveSummary() : null,
                 scoreResult != null ? scoreResult.getCalculatedAt() : null,
                 buildPhotoData(selectedPhotos)
         );
@@ -211,6 +212,23 @@ public class ReportService {
 
         return scoreResultRepository.findByIdAndPatientId(scoreResultId, patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Score result not found: " + scoreResultId));
+    }
+
+    private void validateReportAssociations(AnamnesisRecord anamnesisRecord, ScoreResult scoreResult) {
+        if (anamnesisRecord == null || scoreResult == null) {
+            return;
+        }
+
+        if (scoreResult.getAnamnesisRecord() != null
+                && !scoreResult.getAnamnesisRecord().getId().equals(anamnesisRecord.getId())) {
+            throw new IllegalArgumentException(
+                    "Selected score result must belong to the selected anamnesis record"
+            );
+        }
+    }
+
+    private String scoreResultServiceLabel(ScoreResult scoreResult) {
+        return scoreResult.resolveLabel();
     }
 
     private List<PatientPhoto> findSelectedPhotos(UUID patientId, List<UUID> selectedPhotoIds) {

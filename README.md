@@ -40,7 +40,7 @@ It is intentionally small, but already organized for professional evolution:
 - patient anamnesis history and submitted record viewing
 - patient photo upload with local filesystem storage and database metadata
 - patient photo gallery, filtering, details, delete, and before/after comparison
-- read-only patient score result listing for report selection
+- native patient score calculation, persistence, history, and details linked to anamnesis submissions
 - patient clinical PDF report generation with local disk storage and database metadata
 - patient report listing, details, open/download, and delete flow
 - dashboard shell with sidebar and header
@@ -74,8 +74,9 @@ It is intentionally small, but already organized for professional evolution:
 
 ## Score Endpoints
 
-- `GET /api/patients/{patientId}/score-results`
-- `GET /api/patients/{patientId}/score-results/{scoreResultId}`
+- `POST /api/patients/{patientId}/anamnesis-records/{recordId}/scores`
+- `GET /api/patients/{patientId}/scores`
+- `GET /api/patients/{patientId}/scores/{scoreId}`
 
 ## Report Endpoints
 
@@ -115,10 +116,19 @@ It is intentionally small, but already organized for professional evolution:
 
 1. Open a patient details page
 2. Enter the reports section and choose `Generate report`
-3. Optionally select one anamnesis record, one score result, and any patient photos
+3. Optionally select one anamnesis record, one score result from that same record, and any patient photos
 4. Enter the report title and optional clinician summary
 5. Generate the PDF on the backend and store the file locally
 6. Review report metadata, open the PDF, download it, or delete it
+
+## Patient Scoring Flow
+
+1. Open a patient anamnesis record
+2. Choose `Calculate score`
+3. The backend evaluates the stored answers using the anamnesis template scoring configuration
+4. A new score result is persisted with total score, classification, summary, and itemized contributions
+5. Review the result from patient score history or the score details page
+6. Optionally select that stored result during report generation
 
 ## Media Storage Strategy
 
@@ -144,7 +154,7 @@ The first report module assembles one PDF from existing local data:
 
 - patient identification and patient notes from the patient module
 - optional anamnesis template name, submission date, and stored answers from the anamnesis module
-- optional score type, numeric value, classification, and interpretation from the scoring module
+- optional stored score label, numeric value, classification, and summary from the scoring module
 - selected patient photos and photo notes from the media module
 - optional clinician summary text provided at report generation time
 
@@ -164,6 +174,22 @@ The first report module assembles one PDF from existing local data:
 - `SINGLE_CHOICE`
 - `MULTIPLE_CHOICE`
 - `BOOLEAN`
+
+## Score Calculation Rules
+
+- `BOOLEAN`: contributes the question weight when the answer is `true`; `false` contributes zero
+- `SINGLE_CHOICE`: contributes the selected option score, multiplied by question weight when present
+- `MULTIPLE_CHOICE`: contributes the sum of selected option scores, multiplied by question weight when present
+- `NUMBER`: contributes `answer * questionWeight` when a question weight is configured
+- `TEXT`, `TEXTAREA`, and `DATE`: do not contribute in this MVP
+- a record must contain at least one scorable configured answer to produce a score result
+
+## Score Classification
+
+- `LOW`: total score below the moderate threshold
+- `MODERATE`: total score from the moderate threshold up to the high threshold
+- `HIGH`: total score at or above the high threshold
+- default thresholds are controlled by `APP_SCORING_MODERATE_THRESHOLD=10` and `APP_SCORING_HIGH_THRESHOLD=20`
 
 ## Local Prerequisites
 
@@ -200,11 +226,11 @@ Frontend example:
 - authentication is only scaffolded, not implemented
 - patient deletion is currently a hard delete
 - anamnesis does not yet support conditional logic
-- anamnesis answers are stored without scoring calculation
+- anamnesis answers can now generate native score history, but the scoring logic is still an MVP rule set
 - patient photos use local filesystem storage only in this step
 - no image processing, compression, thumbnails, or advanced comparison slider yet
 - photo upload metadata is shared across all files in a single upload request
-- score results are read-only in this step and still depend on stored scoring data already present in the database
+- score results are tied to anamnesis records and stored historically, but there is no score editing or rule versioning yet
 - the first PDF report is structured and professional, but does not yet support branded theming, report template versions, or rich pagination controls
 - no Flyway migrations yet
 - no automated frontend test suite yet
@@ -216,5 +242,5 @@ Frontend example:
 1. Add Java 21, Maven, Node.js, and npm to the local machine if they are missing.
 2. Add authenticated access control around patient, anamnesis, and photo routes.
 3. Expand media with metadata editing, thumbnails, and future cloud object storage migration.
-4. Expand scoring creation and history so reports can be generated from native calculated results instead of read-only stored entries.
+4. Add score rule versioning and safer template evolution controls now that native scoring exists.
 5. Introduce Flyway before the schema grows significantly.

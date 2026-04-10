@@ -60,6 +60,7 @@ export type AnamnesisQuestion = {
   displayOrder: number;
   scoringWeight: number | null;
   options: string[];
+  optionScores: Record<string, number>;
 };
 
 export type AnamnesisTemplate = {
@@ -79,6 +80,7 @@ export type AnamnesisQuestionInput = {
   displayOrder: number;
   scoringWeight: number | null;
   options: string[];
+  optionScores: Record<string, number>;
 };
 
 export type AnamnesisTemplateInput = {
@@ -150,14 +152,26 @@ export type PatientPhotoUploadInput = {
   anamnesisRecordId: string | null;
 };
 
+export type ScoreResultItem = {
+  questionId: string;
+  questionLabel: string;
+  questionType: QuestionType;
+  answerValue: string | null;
+  contribution: number;
+  ruleApplied: string;
+};
+
 export type ScoreResult = {
   id: string;
   patientId: string;
-  scoreType: string;
-  scoreValue: number;
-  classification: string | null;
-  interpretation: string | null;
+  patientName: string;
+  anamnesisRecordId: string | null;
+  anamnesisTemplateName: string | null;
+  totalScore: number;
+  classification: "LOW" | "MODERATE" | "HIGH" | null;
+  summary: string | null;
   calculatedAt: string;
+  items: ScoreResultItem[];
 };
 
 export type ReportType = "CLINICAL_EVALUATION";
