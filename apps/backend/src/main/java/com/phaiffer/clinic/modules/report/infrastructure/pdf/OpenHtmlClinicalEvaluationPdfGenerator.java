@@ -45,16 +45,16 @@ public class OpenHtmlClinicalEvaluationPdfGenerator implements ClinicalEvaluatio
                       .eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #0f766e; }
                       .section { margin-top: 18px; }
                       .section-title { font-size: 16px; font-weight: bold; color: #111827; margin-bottom: 8px; }
-                      .meta-grid { width: 100%; border-collapse: collapse; }
-                      .meta-grid td { width: 50%; vertical-align: top; padding: 6px 0; }
+                      .meta-grid { width: 100%%; border-collapse: collapse; }
+                      .meta-grid td { width: 50%%; vertical-align: top; padding: 6px 0; }
                       .label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 2px; }
                       .value { color: #111827; }
                       .panel { border: 1px solid #d1d5db; border-radius: 8px; padding: 10px; background: #f8fafc; }
-                      .answer-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                      .answer-table { width: 100%%; border-collapse: collapse; margin-top: 10px; }
                       .answer-table th, .answer-table td { border-bottom: 1px solid #e5e7eb; padding: 8px 6px; text-align: left; vertical-align: top; }
                       .answer-table th { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #475569; }
                       .photo-block { page-break-inside: avoid; margin-top: 12px; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px; }
-                      .photo-block img { width: 100%; max-height: 280px; object-fit: contain; margin-bottom: 8px; }
+                      .photo-block img { width: 100%%; max-height: 280px; object-fit: contain; margin-bottom: 8px; }
                       .muted { color: #64748b; }
                     </style>
                   </head>

@@ -111,7 +111,7 @@ Example local values are available in:
 - no image processing, thumbnail generation, or advanced before/after slider yet
 - first PDF export is implemented, but report theming and template versioning are not
 - WhatsApp integration is still not implemented
-- H2 is kept only for lightweight backend smoke tests, not as a supported local development database
+- backend integration tests now use embedded PostgreSQL plus Flyway instead of an H2 smoke path
 
 ## Patient List Behavior
 
@@ -255,8 +255,42 @@ Classification thresholds:
 - Hibernate runs with `ddl-auto=validate`, so mismatches now fail startup instead of silently changing tables
 - `baseline-on-migrate=true` exists to help adopt an already-existing local schema created before Flyway was added
 
-## H2 Decision
+## Backend Integration Test Setup
 
-H2 is no longer a supported local development database.
-The application now targets PostgreSQL directly for local correctness because the schema includes production-relevant types, constraints, ordering indexes, and migration behavior that are better expressed against the real engine.
-H2 remains only in the backend smoke test to verify that the baseline migration and startup path stay structurally healthy.
+Working directory:
+
+- `apps/backend`
+
+Commands:
+
+- run the full backend test suite:
+  `mvn test`
+- run only the integration workflow suite:
+  `mvn "-Dtest=*IntegrationTest" test`
+- run one integration class:
+  `mvn "-Dtest=MediaAndReportWorkflowIntegrationTest" test`
+
+What the integration tests do:
+
+- boot the real Spring application with `@SpringBootTest`
+- run Flyway migrations against an embedded PostgreSQL instance
+- execute endpoint-level flows through `MockMvc`
+- write patient photo and report files into temporary test directories
+- truncate business tables and clean those temporary directories after each test
+
+Critical workflows covered:
+
+- patient CRUD plus duplicate email rejection
+- anamnesis template lifecycle and safe-editing rules
+- patient anamnesis creation, validation, snapshot persistence, and history retrieval
+- score calculation, persistence, ownership validation, and stored item detail stability
+- patient photo metadata upload plus local file cleanup
+- report generation plus metadata/file cleanup and ownership validation
+
+Local prerequisites for backend integration tests:
+
+- Java 21
+- Maven 3.9+
+
+No local PostgreSQL server is required for the test suite because the tests start an embedded PostgreSQL process automatically.
+The regular application runtime still targets your locally installed PostgreSQL instance.

@@ -254,9 +254,36 @@ If you already have a local schema created before Flyway was introduced, `baseli
 - score results are tied to anamnesis records and stored historically, but there is no score editing or rule versioning yet
 - the first PDF report is structured and professional, but does not yet support branded theming, report template versions, or rich pagination controls
 - local development now assumes PostgreSQL is installed and available outside the monorepo
+- backend integration tests now cover the main patient, anamnesis, scoring, media, and report workflows, but they do not yet cover concurrent edit races or external integrations
 - no automated frontend test suite yet
 - no in-browser PDF preview rendering beyond opening or downloading the file
 - no WhatsApp integration yet
+
+## Backend Integration Tests
+
+The backend now includes high-value integration coverage for the most regression-prone business flows:
+
+- patient create, duplicate email rejection, search/list, get by id, update, and delete
+- anamnesis template create, list, get by id, safe update, unsafe type/removal rejection after answers exist, status toggle, and inactive-template submission rejection
+- patient anamnesis create, required-answer validation, historical snapshot persistence, history list, and record detail retrieval
+- score calculation, persistence, history retrieval, get by id, ownership validation, and stored itemized detail stability
+- patient photo metadata upload with local file persistence, invalid type rejection, list/detail retrieval, ownership validation, and delete cleanup
+- report generation, selected anamnesis/score/photo ownership validation, metadata persistence, PDF file creation, retrieval, and delete cleanup
+
+Test strategy:
+
+- `@SpringBootTest` with `MockMvc` for endpoint-level integration coverage
+- Flyway migrations executed against an embedded PostgreSQL instance in the test profile
+- local filesystem storage redirected to temporary test directories so media and report cleanup can be asserted without touching developer data
+
+Run from `apps/backend`:
+
+- all backend tests:
+  `mvn test`
+- only integration tests:
+  `mvn "-Dtest=*IntegrationTest" test`
+
+The integration suite does not use Docker and does not bypass Flyway. It boots a real PostgreSQL-compatible engine in-process so schema validation stays aligned with the local PostgreSQL-first direction.
 
 ## Recommended Next Order
 

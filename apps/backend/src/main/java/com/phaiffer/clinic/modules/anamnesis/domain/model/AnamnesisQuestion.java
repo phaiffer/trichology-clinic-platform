@@ -129,7 +129,7 @@ public class AnamnesisQuestion {
     }
 
     public void setOptions(List<String> options) {
-        this.options = options;
+        this.options = options == null ? new ArrayList<>() : new ArrayList<>(options);
     }
 
     public Map<String, Double> getOptionScores() {
@@ -137,6 +137,6 @@ public class AnamnesisQuestion {
     }
 
     public void setOptionScores(Map<String, Double> optionScores) {
-        this.optionScores = optionScores;
+        this.optionScores = optionScores == null ? new LinkedHashMap<>() : new LinkedHashMap<>(optionScores);
     }
 }
