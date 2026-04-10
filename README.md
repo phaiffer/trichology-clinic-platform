@@ -35,7 +35,7 @@ It is intentionally small, but already organized for professional evolution:
 - frontend patient creation form connected to the backend
 - frontend patient edit form connected to the backend
 - frontend patient delete action with confirmation
-- anamnesis template creation, listing, and details
+- anamnesis template creation, safe editing, status toggling, listing, and details
 - dynamic patient anamnesis submission based on selected templates
 - patient anamnesis history and submitted record viewing
 - patient photo upload with local filesystem storage and database metadata
@@ -60,6 +60,8 @@ It is intentionally small, but already organized for professional evolution:
 - `GET /api/anamnesis/templates`
 - `GET /api/anamnesis/templates/{id}`
 - `POST /api/anamnesis/templates`
+- `PUT /api/anamnesis/templates/{id}`
+- `PATCH /api/anamnesis/templates/{id}/status`
 - `GET /api/patients/{patientId}/anamnesis-records`
 - `GET /api/patients/{patientId}/anamnesis-records/{recordId}`
 - `POST /api/patients/{patientId}/anamnesis-records`
@@ -98,10 +100,22 @@ It is intentionally small, but already organized for professional evolution:
 
 1. Create reusable anamnesis templates in `/anamnesis/templates/new`
 2. Review template structure in `/anamnesis/templates/{id}`
-3. Start anamnesis from `/patients/{id}`
-4. Select a template and answer dynamically rendered questions
-5. Save the patient anamnesis record
-6. Review submitted history and open a stored record from the patient details page
+3. Edit metadata, questions, scoring settings, or status in `/anamnesis/templates/{id}/edit`
+4. Start anamnesis from `/patients/{id}`
+5. Select an active template and answer dynamically rendered questions
+6. Save the patient anamnesis record
+7. Review submitted history and open a stored record from the patient details page
+
+## Template Editing Safety Policy
+
+- template edits apply to future anamnesis submissions only
+- stored patient answers are snapshotted when a record is created, so later template edits do not rewrite historical record labels, order, or answer interpretation
+- score calculations read the stored answer snapshot, so recalculating from an older anamnesis record stays aligned with the historical question configuration used when that record was submitted
+- stored score results remain immutable and are never recalculated retroactively by template edits
+- generated reports remain stable because they read stored records and stored score results, not live template configuration
+- inactive templates stay readable in history and details pages, but they are excluded from new patient anamnesis submissions
+- removing a question is only allowed when that question has no stored patient answers yet
+- changing a question type is rejected once that question already has stored patient answers, because the meaning of historical answers would become ambiguous
 
 ## Patient Photo Flow
 
@@ -227,6 +241,7 @@ Frontend example:
 - patient deletion is currently a hard delete
 - anamnesis does not yet support conditional logic
 - anamnesis answers can now generate native score history, but the scoring logic is still an MVP rule set
+- template editing is intentionally pragmatic: there is no full template versioning or audit diff model yet
 - patient photos use local filesystem storage only in this step
 - no image processing, compression, thumbnails, or advanced comparison slider yet
 - photo upload metadata is shared across all files in a single upload request
@@ -242,5 +257,5 @@ Frontend example:
 1. Add Java 21, Maven, Node.js, and npm to the local machine if they are missing.
 2. Add authenticated access control around patient, anamnesis, and photo routes.
 3. Expand media with metadata editing, thumbnails, and future cloud object storage migration.
-4. Add score rule versioning and safer template evolution controls now that native scoring exists.
+4. Add explicit template and scoring version history once the clinic needs edit audit trails beyond the current safe future-only policy.
 5. Introduce Flyway before the schema grows significantly.

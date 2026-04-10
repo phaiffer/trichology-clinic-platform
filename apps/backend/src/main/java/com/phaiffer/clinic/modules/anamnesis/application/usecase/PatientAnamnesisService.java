@@ -48,6 +48,10 @@ public class PatientAnamnesisService {
     public PatientAnamnesisRecordResponse createRecord(UUID patientId, AnamnesisRecordRequest request) {
         Patient patient = findPatient(patientId);
         AnamnesisTemplate template = templateService.findTemplate(request.templateId());
+        if (!template.isActive()) {
+            throw new IllegalArgumentException("Inactive templates cannot be used for new anamnesis submissions");
+        }
+
         Map<UUID, AnamnesisQuestion> questionsById = new HashMap<>();
 
         for (AnamnesisQuestion question : template.getQuestions()) {
@@ -59,11 +63,17 @@ public class PatientAnamnesisService {
         AnamnesisRecord record = new AnamnesisRecord();
         record.setPatient(patient);
         record.setTemplate(template);
+        record.setTemplateNameSnapshot(template.getName());
 
         for (AnamnesisAnswerRequest answerRequest : request.answers()) {
             AnamnesisQuestion question = questionsById.get(answerRequest.questionId());
             AnamnesisAnswer answer = new AnamnesisAnswer();
             answer.setQuestion(question);
+            answer.setQuestionLabelSnapshot(question.getLabel());
+            answer.setQuestionTypeSnapshot(question.getType());
+            answer.setQuestionDisplayOrderSnapshot(question.getDisplayOrder());
+            answer.setQuestionScoringWeightSnapshot(question.getScoringWeight());
+            answer.setQuestionOptionScoresSnapshot(serializeAnswer(question.getOptionScores()));
             answer.setAnswerValue(serializeAnswer(answerRequest.value()));
             record.addAnswer(answer);
         }
@@ -172,4 +182,3 @@ public class PatientAnamnesisService {
         }
     }
 }
-

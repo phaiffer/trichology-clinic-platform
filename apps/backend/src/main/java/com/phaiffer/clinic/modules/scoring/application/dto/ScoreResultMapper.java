@@ -15,7 +15,7 @@ public final class ScoreResultMapper {
                 scoreResult.getPatient().getFirstName() + " " + scoreResult.getPatient().getLastName(),
                 scoreResult.getAnamnesisRecord() != null ? scoreResult.getAnamnesisRecord().getId() : null,
                 scoreResult.getAnamnesisRecord() != null
-                        ? scoreResult.getAnamnesisRecord().getTemplate().getName()
+                        ? scoreResult.getAnamnesisRecord().resolveTemplateName()
                         : scoreResult.getScoreType(),
                 scoreResult.resolveTotalScore(),
                 scoreResult.resolveClassification(),

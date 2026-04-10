@@ -162,6 +162,26 @@ export async function createAnamnesisTemplate(
   });
 }
 
+export async function updateAnamnesisTemplate(
+  id: string,
+  input: AnamnesisTemplateInput,
+): Promise<AnamnesisTemplate> {
+  return apiRequest<AnamnesisTemplate>(`/anamnesis/templates/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateAnamnesisTemplateStatus(
+  id: string,
+  active: boolean,
+): Promise<AnamnesisTemplate> {
+  return apiRequest<AnamnesisTemplate>(`/anamnesis/templates/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ active }),
+  });
+}
+
 export async function getPatientAnamnesisRecords(
   patientId: string,
 ): Promise<PatientAnamnesisRecordListItem[]> {

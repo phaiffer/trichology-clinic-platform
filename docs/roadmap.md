@@ -4,7 +4,7 @@
 
 - Finish authentication with login flow and session strategy
 - Decide when the project is mature enough to replace hard delete with soft delete plus audit support
-- Add score rule versioning and safe template evolution on top of the implemented scoring workflow
+- Add explicit template version history and score rule versioning on top of the implemented safe future-only editing workflow
 - Decide when conditional question logic becomes necessary for anamnesis templates
 - Add metadata editing and thumbnail generation for patient photos
 - Prepare the media and report storage adapters for optional cloud object storage migration

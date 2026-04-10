@@ -33,7 +33,7 @@ public final class ReportMapper {
                 report.getPatient().getId(),
                 report.getPatient().getFirstName() + " " + report.getPatient().getLastName(),
                 report.getAnamnesisRecord() != null ? report.getAnamnesisRecord().getId() : null,
-                report.getAnamnesisRecord() != null ? report.getAnamnesisRecord().getTemplate().getName() : null,
+                report.getAnamnesisRecord() != null ? report.getAnamnesisRecord().resolveTemplateName() : null,
                 report.getScoreResult() != null ? report.getScoreResult().getId() : null,
                 report.getScoreResult() != null ? report.getScoreResult().resolveLabel() : null,
                 report.getScoreResult() != null ? report.getScoreResult().resolveTotalScore() : null,

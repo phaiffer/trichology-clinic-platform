@@ -32,4 +32,3 @@ public class AnamnesisTemplateRepositoryAdapter implements AnamnesisTemplateRepo
         return templateJpaRepository.save(template);
     }
 }
-

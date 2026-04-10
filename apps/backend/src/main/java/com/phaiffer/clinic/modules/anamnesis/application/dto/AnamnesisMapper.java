@@ -45,7 +45,7 @@ public final class AnamnesisMapper {
                 record.getId(),
                 record.getPatient().getId(),
                 record.getTemplate().getId(),
-                record.getTemplate().getName(),
+                record.resolveTemplateName(),
                 record.getCreatedAt()
         );
     }
@@ -59,12 +59,12 @@ public final class AnamnesisMapper {
                 record.getPatient().getId(),
                 record.getPatient().getFirstName() + " " + record.getPatient().getLastName(),
                 record.getTemplate().getId(),
-                record.getTemplate().getName(),
+                record.resolveTemplateName(),
                 record.getCreatedAt(),
                 record.getAnswers().stream()
                         .sorted((left, right) -> Integer.compare(
-                                left.getQuestion().getDisplayOrder(),
-                                right.getQuestion().getDisplayOrder()
+                                left.resolveQuestionDisplayOrder(),
+                                right.resolveQuestionDisplayOrder()
                         ))
                         .map(answer -> toAnswerResponse(answer, objectMapper))
                         .toList()
@@ -75,8 +75,8 @@ public final class AnamnesisMapper {
         return new AnamnesisAnswerResponse(
                 answer.getId(),
                 answer.getQuestion().getId(),
-                answer.getQuestion().getLabel(),
-                answer.getQuestion().getType(),
+                answer.resolveQuestionLabel(),
+                answer.resolveQuestionType(),
                 deserializeAnswer(answer.getAnswerValue(), objectMapper)
         );
     }

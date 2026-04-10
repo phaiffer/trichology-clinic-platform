@@ -111,7 +111,7 @@ public class ReportService {
                 patient.getGender(),
                 patient.getNotes(),
                 normalizedSummary,
-                anamnesisRecord != null ? anamnesisRecord.getTemplate().getName() : null,
+                anamnesisRecord != null ? anamnesisRecord.resolveTemplateName() : null,
                 anamnesisRecord != null ? anamnesisRecord.getCreatedAt() : null,
                 buildAnswerData(anamnesisRecord),
                 scoreResult != null ? scoreResultServiceLabel(scoreResult) : null,
@@ -270,8 +270,8 @@ public class ReportService {
 
         return anamnesisRecord.getAnswers().stream()
                 .sorted((left, right) -> Integer.compare(
-                        left.getQuestion().getDisplayOrder(),
-                        right.getQuestion().getDisplayOrder()
+                        left.resolveQuestionDisplayOrder(),
+                        right.resolveQuestionDisplayOrder()
                 ))
                 .map(this::toAnswerData)
                 .toList();
@@ -279,7 +279,7 @@ public class ReportService {
 
     private ClinicalEvaluationPdfAnswerData toAnswerData(AnamnesisAnswer answer) {
         return new ClinicalEvaluationPdfAnswerData(
-                answer.getQuestion().getLabel(),
+                answer.resolveQuestionLabel(),
                 formatAnswerValue(answer.getAnswerValue())
         );
     }

@@ -14,4 +14,3 @@ public interface AnamnesisTemplateRepository {
 
     AnamnesisTemplate save(AnamnesisTemplate template);
 }
-

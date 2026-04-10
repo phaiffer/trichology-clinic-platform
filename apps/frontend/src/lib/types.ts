@@ -73,6 +73,7 @@ export type AnamnesisTemplate = {
 };
 
 export type AnamnesisQuestionInput = {
+  id?: string;
   label: string;
   helperText: string | null;
   type: QuestionType;

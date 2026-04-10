@@ -1,9 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createAnamnesisTemplate } from "@/lib/api";
-import { AnamnesisQuestionInput, AnamnesisTemplateInput, QuestionType } from "@/lib/types";
+import { createAnamnesisTemplate, updateAnamnesisTemplate } from "@/lib/api";
+import {
+  AnamnesisQuestion,
+  AnamnesisQuestionInput,
+  AnamnesisTemplate,
+  AnamnesisTemplateInput,
+  QuestionType,
+} from "@/lib/types";
 
 const questionTypes: QuestionType[] = [
   "TEXT",
@@ -28,15 +34,53 @@ function createQuestion(order: number): AnamnesisQuestionInput {
   };
 }
 
-const initialForm: AnamnesisTemplateInput = {
-  name: "",
-  description: null,
-  active: true,
-  questions: [createQuestion(1)],
+function mapQuestion(question: AnamnesisQuestion): AnamnesisQuestionInput {
+  return {
+    id: question.id,
+    label: question.label,
+    helperText: question.helperText,
+    type: question.type,
+    required: question.required,
+    displayOrder: question.displayOrder,
+    scoringWeight: question.scoringWeight,
+    options: [...question.options],
+    optionScores: { ...question.optionScores },
+  };
+}
+
+function buildInitialForm(template?: AnamnesisTemplate): AnamnesisTemplateInput {
+  if (!template) {
+    return {
+      name: "",
+      description: null,
+      active: true,
+      questions: [createQuestion(1)],
+    };
+  }
+
+  const questions = [...template.questions]
+    .sort((left, right) => left.displayOrder - right.displayOrder)
+    .map(mapQuestion);
+
+  return {
+    name: template.name,
+    description: template.description,
+    active: template.active,
+    questions: questions.length > 0 ? questions : [createQuestion(1)],
+  };
+}
+
+type AnamnesisTemplateFormProps = {
+  mode?: "create" | "edit";
+  template?: AnamnesisTemplate;
 };
 
-export function AnamnesisTemplateForm() {
+export function AnamnesisTemplateForm({
+  mode = "create",
+  template,
+}: AnamnesisTemplateFormProps) {
   const router = useRouter();
+  const initialForm = useMemo(() => buildInitialForm(template), [template]);
   const [form, setForm] = useState<AnamnesisTemplateInput>(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,12 +107,7 @@ export function AnamnesisTemplateForm() {
   function removeQuestion(index: number) {
     setForm((current) => ({
       ...current,
-      questions: current.questions
-        .filter((_, questionIndex) => questionIndex !== index)
-        .map((question, questionIndex) => ({
-          ...question,
-          displayOrder: questionIndex + 1,
-        })),
+      questions: current.questions.filter((_, questionIndex) => questionIndex !== index),
     }));
   }
 
@@ -77,12 +116,13 @@ export function AnamnesisTemplateForm() {
     setError(null);
     setIsSubmitting(true);
 
-    try {
-      await createAnamnesisTemplate({
-        ...form,
-        name: form.name.trim(),
-        description: form.description?.trim() || null,
-        questions: form.questions.map((question) => ({
+    const payload: AnamnesisTemplateInput = {
+      ...form,
+      name: form.name.trim(),
+      description: form.description?.trim() || null,
+      questions: [...form.questions]
+        .sort((left, right) => left.displayOrder - right.displayOrder)
+        .map((question) => ({
           ...question,
           label: question.label.trim(),
           helperText: question.helperText?.trim() || null,
@@ -93,15 +133,25 @@ export function AnamnesisTemplateForm() {
             ),
           ),
         })),
-      });
+    };
 
-      router.push("/anamnesis");
+    try {
+      if (mode === "edit" && template) {
+        await updateAnamnesisTemplate(template.id, payload);
+        router.push(`/anamnesis/templates/${template.id}`);
+      } else {
+        await createAnamnesisTemplate(payload);
+        router.push("/anamnesis");
+      }
+
       router.refresh();
     } catch (submissionError) {
       setError(
         submissionError instanceof Error
           ? submissionError.message
-          : "Unable to create anamnesis template",
+          : mode === "edit"
+            ? "Unable to update anamnesis template"
+            : "Unable to create anamnesis template",
       );
     } finally {
       setIsSubmitting(false);
@@ -110,6 +160,13 @@ export function AnamnesisTemplateForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {mode === "edit" ? (
+        <section className="rounded-[2rem] border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+          Template edits affect future anamnesis submissions only. Existing patient
+          answers, stored score results, and generated reports remain historically stable.
+        </section>
+      ) : null}
+
       <section className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
         <div className="grid gap-4 md:grid-cols-2">
           <Field
@@ -149,12 +206,12 @@ export function AnamnesisTemplateForm() {
       </section>
 
       <section className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold text-brand-900">Questions</h2>
             <p className="mt-2 text-sm text-slate-600">
-              Build the ordered questionnaire that will be rendered dynamically for
-              patient intake.
+              Update the ordered questionnaire that will be used for future patient
+              anamnesis submissions.
             </p>
           </div>
 
@@ -174,13 +231,20 @@ export function AnamnesisTemplateForm() {
 
             return (
               <article
-                key={`${question.displayOrder}-${index}`}
+                key={question.id ?? `new-${index}`}
                 className="rounded-3xl border border-brand-100 p-5"
               >
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-500">
-                    Question {index + 1}
-                  </p>
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-500">
+                      Question {index + 1}
+                    </p>
+                    {question.id ? (
+                      <p className="mt-1 text-xs text-slate-400">Existing question</p>
+                    ) : (
+                      <p className="mt-1 text-xs text-slate-400">New question</p>
+                    )}
+                  </div>
 
                   {form.questions.length > 1 ? (
                     <button
@@ -295,23 +359,23 @@ export function AnamnesisTemplateForm() {
                     <textarea
                       value={question.options.join("\n")}
                       onChange={(event) =>
-                        updateQuestion(index, (current) => ({
-                          ...current,
-                          options: event.target.value
+                        updateQuestion(index, (current) => {
+                          const nextOptions = event.target.value
                             .split("\n")
                             .map((option) => option.trim())
-                            .filter((option) => option.length > 0),
-                          optionScores: Object.fromEntries(
-                            event.target.value
-                              .split("\n")
-                              .map((option) => option.trim())
-                              .filter((option) => option.length > 0)
-                              .map((option) => [
+                            .filter((option) => option.length > 0);
+
+                          return {
+                            ...current,
+                            options: nextOptions,
+                            optionScores: Object.fromEntries(
+                              nextOptions.map((option) => [
                                 option,
                                 current.optionScores[option] ?? 0,
                               ]),
-                          ),
-                        }))
+                            ),
+                          };
+                        })
                       }
                       className="min-h-24 w-full rounded-2xl border border-brand-100 px-4 py-3 outline-none transition focus:border-brand-500"
                       placeholder={"Option A\nOption B"}
@@ -366,7 +430,13 @@ export function AnamnesisTemplateForm() {
           disabled={isSubmitting}
           className="rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-900 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {isSubmitting ? "Saving template..." : "Create template"}
+          {isSubmitting
+            ? mode === "edit"
+              ? "Saving template..."
+              : "Creating template..."
+            : mode === "edit"
+              ? "Save changes"
+              : "Create template"}
         </button>
         <button
           type="button"

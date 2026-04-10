@@ -163,7 +163,7 @@ public class ScoreResult {
 
     public String resolveLabel() {
         if (anamnesisRecord != null) {
-            return anamnesisRecord.getTemplate().getName() + " score";
+            return anamnesisRecord.resolveTemplateName() + " score";
         }
         return scoreType;
     }

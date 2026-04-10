@@ -37,7 +37,7 @@ The frontend uses the Next.js App Router with:
 - shared layout components for sidebar and header
 - a small API client in `src/lib`
 - server-rendered patient and anamnesis pages
-- client-side forms for patient management, template creation, and dynamic anamnesis entry
+- client-side forms for patient management, safe template creation and editing, and dynamic anamnesis entry
 
 ### Current Frontend Routes
 
@@ -59,6 +59,7 @@ The frontend uses the Next.js App Router with:
 - `/anamnesis`: anamnesis template list
 - `/anamnesis/templates/new`: anamnesis template creation
 - `/anamnesis/templates/[id]`: anamnesis template details
+- `/anamnesis/templates/[id]/edit`: anamnesis template editing
 - `/photos`: photo module overview
 - `/scoring`: placeholder landing page, with real score workflows exposed through patient APIs and patient routes
 - `/reports`: simple patient-first reports landing page
@@ -134,7 +135,18 @@ Current design choices:
 - template questions are dynamic and backend-defined
 - choice options are configured per question
 - answers are stored independently from scoring
+- anamnesis records snapshot the template name used at submission time
+- answer rows snapshot question label, type, order, scoring weight, and option scores at submission time
 - no conditional logic yet, but question type and option structure keep that path open later
+
+Template editing policy:
+
+- template edits are future-only and do not mutate stored patient answers
+- inactive templates stay readable but are excluded from new submissions
+- question type changes are rejected after the question has stored answers
+- question removal is rejected after the question has stored answers
+- metadata, helper text, required flag, order, scoring weight, options, and option scores can be updated for future submissions
+- this step intentionally avoids full template version tables and keeps the current monorepo boundaries intact
 
 ## Media Module Design Notes
 
@@ -171,6 +183,7 @@ Current design choices:
 - recalculating from the same record creates a new stored result, preserving history
 - score results store total score, classification, summary, and itemized contributions
 - itemized contributions are persisted so later template edits do not rewrite historical results
+- score recalculation reads the answer snapshot stored on the anamnesis record instead of the live template question row
 - score classification is derived from configurable backend thresholds
 - report generation keeps linking to one stored score result and now validates the score/anamnesis pairing when both are selected
 
@@ -210,6 +223,8 @@ Current report content assembly:
 - selected patient photos embedded directly into the generated PDF
 - patient notes plus optional clinician summary text entered during generation
 
+Because report assembly now reads the stored anamnesis answer snapshot and stored score results, later template edits do not retroactively change historical PDFs that were already generated or the source data used to generate new reports from older records.
+
 Current report limitations:
 
 - no versioned templates or report theming yet
@@ -226,7 +241,7 @@ The current codebase already supports:
 - health endpoint
 - patient CRUD API with detail, update, delete, search, and pagination
 - frontend-to-backend integration for patient list, search, detail, create, edit, and delete
-- anamnesis template creation, listing, and details
+- anamnesis template creation, safe editing, status toggling, listing, and details
 - patient anamnesis submission, history, and record viewing
 - patient photo upload, gallery filtering, detail, delete, and before/after comparison
 - patient score calculation from anamnesis, score history, and score detail viewing
@@ -238,6 +253,6 @@ The current codebase already supports:
 - Add Flyway before production adoption
 - Replace open patient endpoints with authenticated role-based access
 - Introduce object storage adapters for photos
-- Add score rule versioning, richer score editing controls, and audit-ready calculation metadata
+- Add explicit template version history and score rule version history when audit-grade edit lineage becomes necessary
 - Add report template versions and presentation refinements
 - Add notification provider abstraction for WhatsApp reminders

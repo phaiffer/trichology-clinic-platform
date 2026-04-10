@@ -18,4 +18,3 @@ public interface AnamnesisTemplateJpaRepository extends JpaRepository<AnamnesisT
     @EntityGraph(attributePaths = {"questions", "questions.options"})
     Optional<AnamnesisTemplate> findById(UUID id);
 }
-

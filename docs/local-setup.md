@@ -79,7 +79,7 @@ Example local values are available in:
 - patient create, list, get, update, and delete API endpoints
 - patient list pagination with `page` and `size`
 - patient search by name with `search`
-- anamnesis template create, list, and get by id
+- anamnesis template create, update, status toggle, list, and get by id
 - patient anamnesis record create, list by patient, and get by id
 - patient photo upload, list, get by id, secure file serving, and delete
 - patient score calculation from anamnesis, history list, and get by id
@@ -102,6 +102,7 @@ Example local values are available in:
 - authentication and authorization are not implemented yet
 - patient deletion is currently hard delete
 - anamnesis does not yet support conditional questions
+- anamnesis template editing uses a safe future-only policy, but there is no full template version history yet
 - scoring rules are intentionally MVP-only and do not yet support versioning or advanced formulas
 - the frontend has no automated tests yet
 - patient photo storage is local filesystem only in this step
@@ -131,6 +132,8 @@ Example local values are available in:
 - `GET /api/anamnesis/templates`
 - `GET /api/anamnesis/templates/{id}`
 - `POST /api/anamnesis/templates`
+- `PUT /api/anamnesis/templates/{id}`
+- `PATCH /api/anamnesis/templates/{id}/status`
 - `GET /api/patients/{patientId}/anamnesis-records`
 - `GET /api/patients/{patientId}/anamnesis-records/{recordId}`
 - `POST /api/patients/{patientId}/anamnesis-records`
@@ -160,11 +163,23 @@ Example local values are available in:
 ## Patient Anamnesis Flow
 
 1. Create an anamnesis template
-2. Open a patient
-3. Start anamnesis from the patient details page
-4. Select a template
-5. Submit the dynamically rendered answers
-6. Review the saved record from the patient history section
+2. Optionally edit the template metadata, questions, scoring settings, or active status
+3. Open a patient
+4. Start anamnesis from the patient details page
+5. Select an active template
+6. Submit the dynamically rendered answers
+7. Review the saved record from the patient history section
+
+## Template Editing Behavior
+
+- template edits are applied to future submissions only
+- existing patient anamnesis records keep the template name and question metadata that were stored when the record was created
+- existing score results are not recalculated or rewritten by later template edits
+- recalculating from an older anamnesis record uses the stored answer snapshot from that record
+- inactive templates are hidden from new patient anamnesis submissions but remain readable in template details, patient history, score history, and report flows
+- changing a question type after patient answers exist is rejected with a validation error
+- removing a question after patient answers exist is rejected with a validation error
+- updating label, helper text, required flag, order, scoring weight, options, and option scores is supported for future submissions
 
 ## Patient Photo Flow
 
@@ -227,5 +242,6 @@ When ready to move beyond local H2:
 1. Add PostgreSQL driver
 2. Replace `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, and `DB_DRIVER_CLASS_NAME`
 3. Introduce Flyway migrations
-4. Turn off H2 console in shared environments
-5. Set `APP_SECURITY_PERMIT_ALL=false` once authentication is in place
+4. Add explicit template and scoring version tables once audit-grade edit lineage is needed
+5. Turn off H2 console in shared environments
+6. Set `APP_SECURITY_PERMIT_ALL=false` once authentication is in place

@@ -36,6 +36,9 @@ public class AnamnesisRecord {
     @JoinColumn(name = "template_id", nullable = false)
     private AnamnesisTemplate template;
 
+    @Column(nullable = false, length = 120)
+    private String templateNameSnapshot;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -73,6 +76,14 @@ public class AnamnesisRecord {
         this.template = template;
     }
 
+    public String getTemplateNameSnapshot() {
+        return templateNameSnapshot;
+    }
+
+    public void setTemplateNameSnapshot(String templateNameSnapshot) {
+        this.templateNameSnapshot = templateNameSnapshot;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -80,5 +91,12 @@ public class AnamnesisRecord {
     public List<AnamnesisAnswer> getAnswers() {
         return answers;
     }
-}
 
+    public String resolveTemplateName() {
+        if (templateNameSnapshot != null && !templateNameSnapshot.isBlank()) {
+            return templateNameSnapshot;
+        }
+
+        return template != null ? template.getName() : null;
+    }
+}
