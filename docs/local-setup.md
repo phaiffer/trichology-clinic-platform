@@ -8,6 +8,7 @@
 - Maven 3.9+
 
 The project is designed to run locally without Docker.
+PostgreSQL is now the standard local database path.
 
 ## Backend
 
@@ -24,7 +25,6 @@ Default URLs:
 - API base URL: `http://localhost:8080/api`
 - Health endpoint: `http://localhost:8080/api/health`
 - Actuator health endpoint: `http://localhost:8080/actuator/health`
-- H2 console: `http://localhost:8080/h2-console`
 
 Environment variables:
 
@@ -33,7 +33,6 @@ Environment variables:
 - `DB_USERNAME`: datasource username
 - `DB_PASSWORD`: datasource password
 - `DB_DRIVER_CLASS_NAME`: datasource driver class
-- `H2_CONSOLE_ENABLED`: enables or disables the H2 console
 - `APP_CORS_ALLOWED_ORIGINS`: comma-separated allowed origins
 - `APP_SECURITY_PERMIT_ALL`: keeps all non-health endpoints open during bootstrap when `true`
 - `APP_MEDIA_PATIENT_PHOTO_STORAGE_ROOT`: local storage root for patient photo binaries
@@ -74,7 +73,9 @@ Example local values are available in:
 ## What Currently Works
 
 - backend startup with Spring Boot, Java 21, and Maven
-- H2 file-based local persistence without Docker
+- PostgreSQL-backed local persistence without Docker
+- Flyway baseline migration on backend startup
+- Hibernate schema validation after Flyway migration
 - health endpoint
 - patient create, list, get, update, and delete API endpoints
 - patient list pagination with `page` and `size`
@@ -110,7 +111,7 @@ Example local values are available in:
 - no image processing, thumbnail generation, or advanced before/after slider yet
 - first PDF export is implemented, but report theming and template versioning are not
 - WhatsApp integration is still not implemented
-- Flyway is not configured yet
+- H2 is kept only for lightweight backend smoke tests, not as a supported local development database
 
 ## Patient List Behavior
 
@@ -235,13 +236,27 @@ Classification thresholds:
 - `MODERATE`: from `APP_SCORING_MODERATE_THRESHOLD` up to `APP_SCORING_HIGH_THRESHOLD`
 - `HIGH`: at or above `APP_SCORING_HIGH_THRESHOLD`
 
-## PostgreSQL Migration Path
+## Database Setup
 
-When ready to move beyond local H2:
+1. Install PostgreSQL locally.
+2. Create the database:
+   `psql -U postgres -c "CREATE DATABASE trichology_clinic;"`
+3. Export the backend variables from `apps/backend/.env.example`, or set equivalent values in your shell.
+4. Start the backend from `apps/backend`:
+   `mvn spring-boot:run`
+5. Flyway will create the schema on a clean database before Spring Data repositories initialize.
 
-1. Add PostgreSQL driver
-2. Replace `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, and `DB_DRIVER_CLASS_NAME`
-3. Introduce Flyway migrations
-4. Add explicit template and scoring version tables once audit-grade edit lineage is needed
-5. Turn off H2 console in shared environments
-6. Set `APP_SECURITY_PERMIT_ALL=false` once authentication is in place
+## Migration Rules
+
+- Migration files live in `apps/backend/src/main/resources/db/migration`
+- The project starts with a single baseline: `V1__baseline_schema.sql`
+- Future schema changes must be added as new versioned migrations such as `V2__add_x.sql`
+- Do not edit an already-applied migration in shared use; create the next migration instead
+- Hibernate runs with `ddl-auto=validate`, so mismatches now fail startup instead of silently changing tables
+- `baseline-on-migrate=true` exists to help adopt an already-existing local schema created before Flyway was added
+
+## H2 Decision
+
+H2 is no longer a supported local development database.
+The application now targets PostgreSQL directly for local correctness because the schema includes production-relevant types, constraints, ordering indexes, and migration behavior that are better expressed against the real engine.
+H2 remains only in the backend smoke test to verify that the baseline migration and startup path stay structurally healthy.

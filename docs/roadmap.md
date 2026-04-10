@@ -2,6 +2,7 @@
 
 ## Phase 1
 
+- Add the first incremental Flyway migration after the baseline instead of changing `V1__baseline_schema.sql`
 - Finish authentication with login flow and session strategy
 - Decide when the project is mature enough to replace hard delete with soft delete plus audit support
 - Add explicit template version history and score rule versioning on top of the implemented safe future-only editing workflow
@@ -25,5 +26,4 @@
 ## Phase 4
 
 - Add role-based authorization
-- Add Flyway and PostgreSQL production profile
 - Add observability, testing layers, and delivery pipeline

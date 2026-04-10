@@ -67,11 +67,13 @@ The frontend uses the Next.js App Router with:
 
 ## Local-First Persistence
 
-Development uses an H2 file database configured in PostgreSQL compatibility mode:
+Development now uses PostgreSQL as the standard local database, with Flyway owning schema evolution:
 
 - no Docker required
-- data persists between restarts
-- migration to PostgreSQL later mainly becomes a datasource and migration-tool concern
+- Flyway runs on startup from `apps/backend/src/main/resources/db/migration`
+- `V1__baseline_schema.sql` captures the current project schema for auth, patient, anamnesis, scoring, media, and report
+- Hibernate runs in `validate` mode so mapping drift fails fast instead of mutating the schema silently
+- `baseline-on-migrate=true` keeps existing local databases practical during the transition to Flyway
 
 The media module intentionally separates metadata from physical files:
 
@@ -94,7 +96,7 @@ The report module now follows the same local-first split:
 ## Security Baseline
 
 - Spring Security enabled from day one
-- health and H2 console are always open
+- health endpoints are always open
 - bootstrap mode can keep application endpoints open through configuration
 - password encoder available for future auth flows
 - CORS restricted by environment configuration
@@ -250,9 +252,9 @@ The current codebase already supports:
 
 ## Evolution Paths
 
-- Add Flyway before production adoption
 - Replace open patient endpoints with authenticated role-based access
 - Introduce object storage adapters for photos
 - Add explicit template version history and score rule version history when audit-grade edit lineage becomes necessary
 - Add report template versions and presentation refinements
 - Add notification provider abstraction for WhatsApp reminders
+- Add post-baseline Flyway migrations incrementally, one schema change at a time

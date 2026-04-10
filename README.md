@@ -9,7 +9,7 @@ It is intentionally small, but already organized for professional evolution:
 
 - Next.js frontend for the clinical workspace
 - Spring Boot backend with layered module boundaries
-- H2 file database for local development without Docker
+- PostgreSQL database for local development without Docker
 - foundation entities and placeholder areas for future modules
 
 ## Monorepo Structure
@@ -23,7 +23,7 @@ It is intentionally small, but already organized for professional evolution:
 - Local development without Docker
 - English-only code and comments
 - Clean, maintainable architecture
-- H2 file database for development, prepared for PostgreSQL migration
+- Explicit Flyway migrations with PostgreSQL as the standard local database
 - Security and LGPD-conscious foundation
 
 ## Current Implemented Scope
@@ -147,7 +147,7 @@ It is intentionally small, but already organized for professional evolution:
 ## Media Storage Strategy
 
 - image binaries are stored on local disk under `apps/backend/storage/patient-photos` by default
-- only metadata is stored in the H2 database
+- only metadata is stored in PostgreSQL
 - stored file names are UUID-based to avoid collisions
 - files are organized by patient id and year/month folders
 - storage configuration is centralized in backend application properties and environment variables
@@ -226,14 +226,20 @@ Frontend example:
 
 1. Copy `apps/backend/.env.example` values into your local environment as needed.
 2. Copy `apps/frontend/.env.local.example` to `apps/frontend/.env.local` if you want to override the default frontend API URL.
-3. Start the backend:
+3. Create the local PostgreSQL database once:
+   `psql -U postgres -c "CREATE DATABASE trichology_clinic;"`
+4. Start the backend:
    `cd apps/backend`
    `mvn spring-boot:run`
-4. Start the frontend in another terminal:
+5. Start the frontend in another terminal:
    `cd apps/frontend`
    `npm install`
    `npm run dev`
-5. Open `http://localhost:3000`
+6. Open `http://localhost:3000`
+
+Flyway runs automatically during backend startup.
+On a clean database it applies `V1__baseline_schema.sql`.
+If you already have a local schema created before Flyway was introduced, `baseline-on-migrate=true` lets the app adopt it without re-running the baseline migration.
 
 ## Current Limitations
 
@@ -247,7 +253,7 @@ Frontend example:
 - photo upload metadata is shared across all files in a single upload request
 - score results are tied to anamnesis records and stored historically, but there is no score editing or rule versioning yet
 - the first PDF report is structured and professional, but does not yet support branded theming, report template versions, or rich pagination controls
-- no Flyway migrations yet
+- local development now assumes PostgreSQL is installed and available outside the monorepo
 - no automated frontend test suite yet
 - no in-browser PDF preview rendering beyond opening or downloading the file
 - no WhatsApp integration yet
@@ -258,4 +264,4 @@ Frontend example:
 2. Add authenticated access control around patient, anamnesis, and photo routes.
 3. Expand media with metadata editing, thumbnails, and future cloud object storage migration.
 4. Add explicit template and scoring version history once the clinic needs edit audit trails beyond the current safe future-only policy.
-5. Introduce Flyway before the schema grows significantly.
+5. Add the first post-baseline Flyway migration for seed auth data or the next real schema change instead of editing `V1__baseline_schema.sql`.

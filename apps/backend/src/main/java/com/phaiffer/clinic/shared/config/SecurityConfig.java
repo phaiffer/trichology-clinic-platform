@@ -30,7 +30,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
-                    auth.requestMatchers("/actuator/health", "/api/health", "/h2-console/**").permitAll();
+                    auth.requestMatchers("/actuator/health", "/api/health").permitAll();
 
                     if (permitAllEndpoints) {
                         auth.anyRequest().permitAll();
