@@ -1,0 +1,220 @@
+# Trichology Clinical Monorepo
+
+Local-first monorepo for a trichology clinical web application.
+
+## Overview
+
+This repository contains a local-first baseline for a trichology clinic platform.
+It is intentionally small, but already organized for professional evolution:
+
+- Next.js frontend for the clinical workspace
+- Spring Boot backend with layered module boundaries
+- H2 file database for local development without Docker
+- foundation entities and placeholder areas for future modules
+
+## Monorepo Structure
+
+- `apps/frontend`: Next.js 14 + TypeScript + Tailwind user interface
+- `apps/backend`: Spring Boot 3 + Java 21 + Maven API
+- `docs`: architecture, local setup, overview, and roadmap
+
+## Principles
+
+- Local development without Docker
+- English-only code and comments
+- Clean, maintainable architecture
+- H2 file database for development, prepared for PostgreSQL migration
+- Security and LGPD-conscious foundation
+
+## Current Implemented Scope
+
+- health endpoint at `/api/health`
+- patient CRUD API with get by id, update, hard delete, search, and pagination
+- frontend patient list page with search and pagination
+- frontend patient details page
+- frontend patient creation form connected to the backend
+- frontend patient edit form connected to the backend
+- frontend patient delete action with confirmation
+- anamnesis template creation, listing, and details
+- dynamic patient anamnesis submission based on selected templates
+- patient anamnesis history and submitted record viewing
+- patient photo upload with local filesystem storage and database metadata
+- patient photo gallery, filtering, details, delete, and before/after comparison
+- read-only patient score result listing for report selection
+- patient clinical PDF report generation with local disk storage and database metadata
+- patient report listing, details, open/download, and delete flow
+- dashboard shell with sidebar and header
+- photo module overview page plus placeholder reminders page
+- foundational backend entities for auth
+
+## Patient Endpoints
+
+- `GET /api/patients?search=&page=0&size=10`
+- `GET /api/patients/{id}`
+- `POST /api/patients`
+- `PUT /api/patients/{id}`
+- `DELETE /api/patients/{id}`
+
+## Anamnesis Endpoints
+
+- `GET /api/anamnesis/templates`
+- `GET /api/anamnesis/templates/{id}`
+- `POST /api/anamnesis/templates`
+- `GET /api/patients/{patientId}/anamnesis-records`
+- `GET /api/patients/{patientId}/anamnesis-records/{recordId}`
+- `POST /api/patients/{patientId}/anamnesis-records`
+
+## Photo Endpoints
+
+- `POST /api/patients/{patientId}/photos`
+- `GET /api/patients/{patientId}/photos`
+- `GET /api/patients/{patientId}/photos/{photoId}`
+- `GET /api/patients/{patientId}/photos/{photoId}/file`
+- `DELETE /api/patients/{patientId}/photos/{photoId}`
+
+## Score Endpoints
+
+- `GET /api/patients/{patientId}/score-results`
+- `GET /api/patients/{patientId}/score-results/{scoreResultId}`
+
+## Report Endpoints
+
+- `POST /api/patients/{patientId}/reports`
+- `GET /api/patients/{patientId}/reports`
+- `GET /api/patients/{patientId}/reports/{reportId}`
+- `GET /api/patients/{patientId}/reports/{reportId}/file`
+- `DELETE /api/patients/{patientId}/reports/{reportId}`
+
+## Patient Flow
+
+1. Create a patient from `/patients/new`
+2. Return to `/patients` and search or paginate through records
+3. Open `/patients/{id}` to review patient details
+4. Edit the patient at `/patients/{id}/edit`
+5. Delete the patient from the details page when needed
+
+## Anamnesis Flow
+
+1. Create reusable anamnesis templates in `/anamnesis/templates/new`
+2. Review template structure in `/anamnesis/templates/{id}`
+3. Start anamnesis from `/patients/{id}`
+4. Select a template and answer dynamically rendered questions
+5. Save the patient anamnesis record
+6. Review submitted history and open a stored record from the patient details page
+
+## Patient Photo Flow
+
+1. Open a patient details page and enter the patient photo area
+2. Upload one or more JPEG, PNG, or WebP files with shared metadata
+3. Optionally associate the upload with an anamnesis record
+4. Review the gallery and filter by category when needed
+5. Open photo details or compare one BEFORE photo with one AFTER photo
+6. Delete a photo when both metadata and local file should be removed
+
+## Patient Report Flow
+
+1. Open a patient details page
+2. Enter the reports section and choose `Generate report`
+3. Optionally select one anamnesis record, one score result, and any patient photos
+4. Enter the report title and optional clinician summary
+5. Generate the PDF on the backend and store the file locally
+6. Review report metadata, open the PDF, download it, or delete it
+
+## Media Storage Strategy
+
+- image binaries are stored on local disk under `apps/backend/storage/patient-photos` by default
+- only metadata is stored in the H2 database
+- stored file names are UUID-based to avoid collisions
+- files are organized by patient id and year/month folders
+- storage configuration is centralized in backend application properties and environment variables
+- the storage implementation is isolated so cloud object storage can replace it later without changing the patient photo API
+
+## Report Generation Strategy
+
+- report metadata is stored in the database
+- generated PDF files are stored on local disk under `apps/backend/storage/reports` by default
+- PDFs are generated on the backend from structured HTML using a simple HTML-to-PDF library
+- report storage configuration is centralized under backend `app.report` properties
+- only stored report paths can be resolved back to files, so the filesystem is not exposed arbitrarily
+- deleting a report removes the metadata row and attempts to remove the stored PDF file
+
+## Report Data Assembly
+
+The first report module assembles one PDF from existing local data:
+
+- patient identification and patient notes from the patient module
+- optional anamnesis template name, submission date, and stored answers from the anamnesis module
+- optional score type, numeric value, classification, and interpretation from the scoring module
+- selected patient photos and photo notes from the media module
+- optional clinician summary text provided at report generation time
+
+## Upload Validation
+
+- allowed MIME types: `image/jpeg`, `image/png`, `image/webp`
+- default max file size: `5242880` bytes per file
+- original file names are sanitized before metadata storage
+- file-serving routes resolve only previously stored paths and reject arbitrary filesystem traversal
+
+## Supported Question Types
+
+- `TEXT`
+- `TEXTAREA`
+- `NUMBER`
+- `DATE`
+- `SINGLE_CHOICE`
+- `MULTIPLE_CHOICE`
+- `BOOLEAN`
+
+## Local Prerequisites
+
+- Java 21
+- Maven 3.9+
+- Node.js 20+
+- npm 10+
+
+## Environment Files
+
+Backend example:
+
+- `apps/backend/.env.example`
+
+Frontend example:
+
+- `apps/frontend/.env.local.example`
+
+## Local Run Steps
+
+1. Copy `apps/backend/.env.example` values into your local environment as needed.
+2. Copy `apps/frontend/.env.local.example` to `apps/frontend/.env.local` if you want to override the default frontend API URL.
+3. Start the backend:
+   `cd apps/backend`
+   `mvn spring-boot:run`
+4. Start the frontend in another terminal:
+   `cd apps/frontend`
+   `npm install`
+   `npm run dev`
+5. Open `http://localhost:3000`
+
+## Current Limitations
+
+- authentication is only scaffolded, not implemented
+- patient deletion is currently a hard delete
+- anamnesis does not yet support conditional logic
+- anamnesis answers are stored without scoring calculation
+- patient photos use local filesystem storage only in this step
+- no image processing, compression, thumbnails, or advanced comparison slider yet
+- photo upload metadata is shared across all files in a single upload request
+- score results are read-only in this step and still depend on stored scoring data already present in the database
+- the first PDF report is structured and professional, but does not yet support branded theming, report template versions, or rich pagination controls
+- no Flyway migrations yet
+- no automated frontend test suite yet
+- no in-browser PDF preview rendering beyond opening or downloading the file
+- no WhatsApp integration yet
+
+## Recommended Next Order
+
+1. Add Java 21, Maven, Node.js, and npm to the local machine if they are missing.
+2. Add authenticated access control around patient, anamnesis, and photo routes.
+3. Expand media with metadata editing, thumbnails, and future cloud object storage migration.
+4. Expand scoring creation and history so reports can be generated from native calculated results instead of read-only stored entries.
+5. Introduce Flyway before the schema grows significantly.

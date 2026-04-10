@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: trichology-clinic-backend
+  datasource:
+    url: ${DB_URL:jdbc:h2:file:./data/trichology-clinic;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;AUTO_SERVER=TRUE}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+    driver-class-name: ${DB_DRIVER_CLASS_NAME:org.h2.Driver}
+  h2:
+    console:
+      enabled: ${H2_CONSOLE_ENABLED:true}
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+    show-sql: false
+  servlet:
+    multipart:
+      max-file-size: ${APP_MEDIA_MULTIPART_MAX_FILE_SIZE:5MB}
+      max-request-size: ${APP_MEDIA_MULTIPART_MAX_REQUEST_SIZE:25MB}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+app:
+  security:
+    permit-all: ${APP_SECURITY_PERMIT_ALL:true}
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  media:
+    patient-photo-storage-root: ${APP_MEDIA_PATIENT_PHOTO_STORAGE_ROOT:./storage/patient-photos}
+    max-file-size-bytes: ${APP_MEDIA_MAX_FILE_SIZE_BYTES:5242880}
+    allowed-content-types: ${APP_MEDIA_ALLOWED_CONTENT_TYPES:image/jpeg,image/png,image/webp}
+  report:
+    storage-root: ${APP_REPORT_STORAGE_ROOT:./storage/reports}
+    clinic-title: ${APP_REPORT_CLINIC_TITLE:Phaiffer Tech Trichology Clinic}
