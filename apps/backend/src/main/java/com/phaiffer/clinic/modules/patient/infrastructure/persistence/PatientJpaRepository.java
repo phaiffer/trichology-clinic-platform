@@ -15,9 +15,7 @@ public interface PatientJpaRepository extends JpaRepository<Patient, UUID> {
     @Query("""
             select p
             from Patient p
-            where :search is null
-               or trim(:search) = ''
-               or lower(p.firstName) like lower(concat('%', :search, '%'))
+            where lower(p.firstName) like lower(concat('%', :search, '%'))
                or lower(p.lastName) like lower(concat('%', :search, '%'))
                or lower(concat(p.firstName, ' ', p.lastName)) like lower(concat('%', :search, '%'))
             """)

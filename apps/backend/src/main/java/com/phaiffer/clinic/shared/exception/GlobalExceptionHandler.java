@@ -40,6 +40,19 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(InvalidAuthenticationException.class)
+    public ResponseEntity<ApiError> handleInvalidAuthentication(
+            InvalidAuthenticationException exception,
+            HttpServletRequest request
+    ) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(buildError(
+                HttpStatus.UNAUTHORIZED,
+                exception.getMessage(),
+                request.getRequestURI(),
+                List.of()
+        ));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException exception, HttpServletRequest request) {
         List<String> details = exception.getBindingResult()

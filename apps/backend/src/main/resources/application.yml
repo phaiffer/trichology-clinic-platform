@@ -28,6 +28,12 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+        secure: ${APP_SECURITY_SESSION_COOKIE_SECURE:false}
 
 management:
   endpoints:
@@ -40,7 +46,9 @@ management:
 
 app:
   security:
-    permit-all: ${APP_SECURITY_PERMIT_ALL:true}
+    bootstrap-admin-email: ${APP_SECURITY_BOOTSTRAP_ADMIN_EMAIL:}
+    bootstrap-admin-password: ${APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD:}
+    bootstrap-admin-full-name: ${APP_SECURITY_BOOTSTRAP_ADMIN_FULL_NAME:Local Administrator}
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000}
   media:

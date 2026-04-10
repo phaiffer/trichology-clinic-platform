@@ -1,3 +1,5 @@
 app:
   security:
-    permit-all: true
+    bootstrap-admin-email:
+    bootstrap-admin-password:
+    bootstrap-admin-full-name: Test Administrator

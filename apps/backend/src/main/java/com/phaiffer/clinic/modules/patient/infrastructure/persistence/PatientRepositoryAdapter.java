@@ -23,7 +23,9 @@ public class PatientRepositoryAdapter implements PatientRepository {
     @Override
     public PageResult<Patient> findAll(String search, int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<Patient> patientPage = patientJpaRepository.search(search, pageRequest);
+        Page<Patient> patientPage = search == null
+                ? patientJpaRepository.findAll(pageRequest)
+                : patientJpaRepository.search(search, pageRequest);
 
         return new PageResult<>(
                 patientPage.getContent(),

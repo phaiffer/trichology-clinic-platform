@@ -2,6 +2,11 @@ package com.phaiffer.clinic.support;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.phaiffer.clinic.modules.auth.domain.model.Role;
+import com.phaiffer.clinic.modules.auth.domain.model.RoleNames;
+import com.phaiffer.clinic.modules.auth.domain.model.User;
+import com.phaiffer.clinic.modules.auth.infrastructure.persistence.RoleJpaRepository;
+import com.phaiffer.clinic.modules.auth.infrastructure.persistence.UserJpaRepository;
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -21,9 +27,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -57,6 +66,15 @@ public abstract class AbstractIntegrationTest {
     @Autowired
     protected JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    protected UserJpaRepository userJpaRepository;
+
+    @Autowired
+    protected RoleJpaRepository roleJpaRepository;
+
+    @Autowired
+    protected PasswordEncoder passwordEncoder;
+
     @DynamicPropertySource
     static void registerProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", () -> jdbcUrl("postgres"));
@@ -71,6 +89,7 @@ public abstract class AbstractIntegrationTest {
     void ensureStorageRootsExist() throws IOException {
         Files.createDirectories(PHOTO_STORAGE_ROOT);
         Files.createDirectories(REPORT_STORAGE_ROOT);
+        ensureRolesExist();
     }
 
     @AfterEach
@@ -95,6 +114,7 @@ public abstract class AbstractIntegrationTest {
                     roles
                 RESTART IDENTITY CASCADE
                 """);
+        ensureRolesExist();
         clearDirectory(PHOTO_STORAGE_ROOT);
         clearDirectory(REPORT_STORAGE_ROOT);
     }
@@ -208,6 +228,16 @@ public abstract class AbstractIntegrationTest {
 
     protected Map<String, Object> answer(UUID questionId, Object value) {
         return Map.of("questionId", questionId, "value", value);
+    }
+
+    protected User createUser(String email, String password, String fullName, String... roleNames) {
+        User user = userJpaRepository.findByEmail(email.trim().toLowerCase(Locale.ROOT)).orElseGet(User::new);
+        user.setEmail(email.trim().toLowerCase(Locale.ROOT));
+        user.setPasswordHash(passwordEncoder.encode(password));
+        user.setFullName(fullName);
+        user.setActive(true);
+        user.setRoles(resolveRoles(roleNames));
+        return userJpaRepository.save(user);
     }
 
     protected Map<String, Object> templateQuestionUpdate(
@@ -325,5 +355,21 @@ public abstract class AbstractIntegrationTest {
                         }
                     });
         }
+    }
+
+    private void ensureRolesExist() {
+        jdbcTemplate.update("insert into roles(name) values (?) on conflict (name) do nothing", RoleNames.ADMIN);
+        jdbcTemplate.update("insert into roles(name) values (?) on conflict (name) do nothing", RoleNames.CLINICIAN);
+        jdbcTemplate.update("insert into roles(name) values (?) on conflict (name) do nothing", RoleNames.STAFF);
+    }
+
+    private Set<Role> resolveRoles(String... roleNames) {
+        Set<Role> roles = new HashSet<>();
+        for (String roleName : roleNames) {
+            Role role = roleJpaRepository.findByName(roleName)
+                    .orElseThrow(() -> new IllegalStateException("Role not found: " + roleName));
+            roles.add(role);
+        }
+        return roles;
     }
 }
