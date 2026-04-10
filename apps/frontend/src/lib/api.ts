@@ -1,6 +1,7 @@
 import {
   AnamnesisTemplate,
   AnamnesisTemplateInput,
+  AuthenticatedUser,
   Patient,
   PatientAnamnesisRecord,
   PatientAnamnesisRecordInput,
@@ -15,6 +16,7 @@ import {
   PatientListResponse,
   ScoreResult,
 } from "@/lib/types";
+import { ApiRequestError } from "@/lib/api-error";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api";
@@ -29,6 +31,7 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers,
     cache: "no-store",
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -45,7 +48,7 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
       errorMessage = fallbackMessage;
     }
 
-    throw new Error(errorMessage);
+    throw new ApiRequestError(errorMessage, response.status);
   }
 
   if (response.status === 204) {
@@ -60,6 +63,7 @@ async function apiMultipartRequest<T>(path: string, formData: FormData): Promise
     method: "POST",
     body: formData,
     cache: "no-store",
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -76,10 +80,27 @@ async function apiMultipartRequest<T>(path: string, formData: FormData): Promise
       errorMessage = fallbackMessage;
     }
 
-    throw new Error(errorMessage);
+    throw new ApiRequestError(errorMessage, response.status);
   }
 
   return response.json() as Promise<T>;
+}
+
+export async function login(email: string, password: string): Promise<AuthenticatedUser> {
+  return apiRequest<AuthenticatedUser>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function logout(): Promise<void> {
+  return apiRequest<void>("/auth/logout", {
+    method: "POST",
+  });
+}
+
+export async function getCurrentUser(): Promise<AuthenticatedUser> {
+  return apiRequest<AuthenticatedUser>("/auth/me");
 }
 
 function buildPatientListQuery(query: PatientListQuery): string {

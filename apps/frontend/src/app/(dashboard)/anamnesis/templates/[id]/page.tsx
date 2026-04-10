@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { TemplateStatusToggle } from "@/components/anamnesis/template-status-toggle";
-import { getAnamnesisTemplate } from "@/lib/api";
+import { canManageTemplates, requireAuthenticatedUser } from "@/lib/auth";
+import { getServerAnamnesisTemplate } from "@/lib/server-api";
 
 export default async function AnamnesisTemplateDetailsPage({
   params,
@@ -8,7 +9,9 @@ export default async function AnamnesisTemplateDetailsPage({
   params: { id: string };
 }) {
   try {
-    const template = await getAnamnesisTemplate(params.id);
+    const currentUser = await requireAuthenticatedUser();
+    const template = await getServerAnamnesisTemplate(params.id);
+    const canEditTemplates = canManageTemplates(currentUser);
 
     return (
       <section className="space-y-6">
@@ -37,14 +40,18 @@ export default async function AnamnesisTemplateDetailsPage({
                 {template.active ? "Active" : "Inactive"}
               </span>
 
-              <Link
-                href={`/anamnesis/templates/${template.id}/edit`}
-                className="rounded-full bg-brand-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-900"
-              >
-                Edit template
-              </Link>
+              {canEditTemplates ? (
+                <>
+                  <Link
+                    href={`/anamnesis/templates/${template.id}/edit`}
+                    className="rounded-full bg-brand-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-900"
+                  >
+                    Edit template
+                  </Link>
 
-              <TemplateStatusToggle templateId={template.id} active={template.active} />
+                  <TemplateStatusToggle templateId={template.id} active={template.active} />
+                </>
+              ) : null}
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getAnamnesisTemplates, getPatient } from "@/lib/api";
+import { getServerAnamnesisTemplates, getServerPatient } from "@/lib/server-api";
 import { PatientAnamnesisForm } from "@/components/anamnesis/patient-anamnesis-form";
 
 export default async function NewPatientAnamnesisPage({
@@ -11,8 +11,8 @@ export default async function NewPatientAnamnesisPage({
 }) {
   try {
     const [patient, templates] = await Promise.all([
-      getPatient(params.id),
-      getAnamnesisTemplates(),
+      getServerPatient(params.id),
+      getServerAnamnesisTemplates(),
     ]);
 
     return (
@@ -58,4 +58,3 @@ export default async function NewPatientAnamnesisPage({
     );
   }
 }
-

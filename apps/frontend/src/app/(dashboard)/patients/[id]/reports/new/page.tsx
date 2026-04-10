@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { canAccessScoring, requireAuthenticatedUser } from "@/lib/auth";
 import {
-  getPatient,
-  getPatientAnamnesisRecords,
-  getPatientPhotos,
-  getPatientScoreResults,
-} from "@/lib/api";
+  getServerPatient,
+  getServerPatientAnamnesisRecords,
+  getServerPatientPhotos,
+  getServerPatientScoreResults,
+} from "@/lib/server-api";
 import { PatientReportForm } from "@/components/reports/patient-report-form";
 
 type NewPatientReportPageProps = {
@@ -17,12 +18,16 @@ export default async function NewPatientReportPage({
   params,
 }: NewPatientReportPageProps) {
   try {
-    const [patient, anamnesisRecords, scoreResults, photos] = await Promise.all([
-      getPatient(params.id),
-      getPatientAnamnesisRecords(params.id),
-      getPatientScoreResults(params.id),
-      getPatientPhotos(params.id),
+    const currentUser = await requireAuthenticatedUser();
+    const canUseScoring = canAccessScoring(currentUser);
+    const [patient, anamnesisRecords, photos] = await Promise.all([
+      getServerPatient(params.id),
+      getServerPatientAnamnesisRecords(params.id),
+      getServerPatientPhotos(params.id),
     ]);
+    const scoreResults = canUseScoring
+      ? await getServerPatientScoreResults(params.id)
+      : [];
 
     const patientName = `${patient.firstName} ${patient.lastName}`;
 
@@ -47,6 +52,7 @@ export default async function NewPatientReportPage({
           anamnesisRecords={anamnesisRecords}
           scoreResults={scoreResults}
           photos={photos}
+          canUseScoring={canUseScoring}
         />
       </section>
     );

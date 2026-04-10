@@ -1,6 +1,10 @@
 import Link from "next/link";
-import { getPatientAnamnesisRecord, getPatientScoreResults } from "@/lib/api";
 import { CreateScoreButton } from "@/components/scoring/create-score-button";
+import { canAccessScoring, requireAuthenticatedUser } from "@/lib/auth";
+import {
+  getServerPatientAnamnesisRecord,
+  getServerPatientScoreResults,
+} from "@/lib/server-api";
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en-US").format(new Date(value));
@@ -28,10 +32,12 @@ export default async function PatientAnamnesisRecordPage({
   params: { id: string; recordId: string };
 }) {
   try {
-    const [record, allScores] = await Promise.all([
-      getPatientAnamnesisRecord(params.id, params.recordId),
-      getPatientScoreResults(params.id),
-    ]);
+    const currentUser = await requireAuthenticatedUser();
+    const canViewScoring = canAccessScoring(currentUser);
+    const record = await getServerPatientAnamnesisRecord(params.id, params.recordId);
+    const allScores = canViewScoring
+      ? await getServerPatientScoreResults(params.id)
+      : [];
     const scoreResults = allScores.filter(
       (score) => score.anamnesisRecordId === params.recordId,
     );
@@ -53,9 +59,15 @@ export default async function PatientAnamnesisRecordPage({
           </p>
 
           <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <CreateScoreButton patientId={params.id} recordId={params.recordId} />
+            {canViewScoring ? (
+              <CreateScoreButton patientId={params.id} recordId={params.recordId} />
+            ) : (
+              <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                Score calculation is available only for clinician and admin accounts.
+              </div>
+            )}
 
-            {scoreResults.length > 0 ? (
+            {canViewScoring && scoreResults.length > 0 ? (
               <div className="rounded-2xl bg-brand-50 px-4 py-3 text-sm text-slate-700">
                 {scoreResults.length} stored score{scoreResults.length === 1 ? "" : "s"} for
                 this anamnesis record
@@ -64,49 +76,51 @@ export default async function PatientAnamnesisRecordPage({
           </div>
         </div>
 
-        <section className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-semibold text-brand-900">Score history</h2>
-              <p className="mt-2 text-sm text-slate-600">
-                Recalculating creates a new stored result so the clinician can keep
-                score history per anamnesis submission.
+        {canViewScoring ? (
+          <section className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold text-brand-900">Score history</h2>
+                <p className="mt-2 text-sm text-slate-600">
+                  Recalculating creates a new stored result so the clinician can keep
+                  score history per anamnesis submission.
+                </p>
+              </div>
+            </div>
+
+            {scoreResults.length === 0 ? (
+              <p className="mt-4 text-sm text-slate-500">
+                No scores have been calculated from this anamnesis record yet.
               </p>
-            </div>
-          </div>
-
-          {scoreResults.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500">
-              No scores have been calculated from this anamnesis record yet.
-            </p>
-          ) : (
-            <div className="mt-6 space-y-3">
-              {scoreResults.map((score) => (
-                <div
-                  key={score.id}
-                  className="flex flex-col gap-3 rounded-3xl border border-brand-100 p-4 md:flex-row md:items-center md:justify-between"
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-brand-900">
-                      {score.totalScore.toFixed(2)} •{" "}
-                      {score.classification || "UNCLASSIFIED"}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      Calculated {formatDate(score.calculatedAt)}
-                    </p>
-                  </div>
-
-                  <Link
-                    href={`/patients/${params.id}/scores/${score.id}`}
-                    className="text-sm font-medium text-brand-700 transition hover:text-brand-900"
+            ) : (
+              <div className="mt-6 space-y-3">
+                {scoreResults.map((score) => (
+                  <div
+                    key={score.id}
+                    className="flex flex-col gap-3 rounded-3xl border border-brand-100 p-4 md:flex-row md:items-center md:justify-between"
                   >
-                    View score details
-                  </Link>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+                    <div>
+                      <p className="text-sm font-semibold text-brand-900">
+                        {score.totalScore.toFixed(2)} •{" "}
+                        {score.classification || "UNCLASSIFIED"}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-500">
+                        Calculated {formatDate(score.calculatedAt)}
+                      </p>
+                    </div>
+
+                    <Link
+                      href={`/patients/${params.id}/scores/${score.id}`}
+                      className="text-sm font-medium text-brand-700 transition hover:text-brand-900"
+                    >
+                      View score details
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        ) : null}
 
         <section className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-brand-900">Submitted answers</h2>

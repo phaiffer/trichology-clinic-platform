@@ -34,7 +34,10 @@ Environment variables:
 - `DB_PASSWORD`: datasource password
 - `DB_DRIVER_CLASS_NAME`: datasource driver class
 - `APP_CORS_ALLOWED_ORIGINS`: comma-separated allowed origins
-- `APP_SECURITY_PERMIT_ALL`: keeps all non-health endpoints open during bootstrap when `true`
+- `APP_SECURITY_SESSION_COOKIE_SECURE`: set to `true` only when the app is served through HTTPS
+- `APP_SECURITY_BOOTSTRAP_ADMIN_EMAIL`: optional local admin email to create or update at startup
+- `APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD`: optional local admin password to hash with BCrypt at startup
+- `APP_SECURITY_BOOTSTRAP_ADMIN_FULL_NAME`: display name for the optional local admin user
 - `APP_MEDIA_PATIENT_PHOTO_STORAGE_ROOT`: local storage root for patient photo binaries
 - `APP_MEDIA_MAX_FILE_SIZE_BYTES`: maximum allowed size per uploaded photo
 - `APP_MEDIA_ALLOWED_CONTENT_TYPES`: comma-separated MIME types allowed for upload
@@ -85,7 +88,8 @@ Example local values are available in:
 - patient photo upload, list, get by id, secure file serving, and delete
 - patient score calculation from anamnesis, history list, and get by id
 - patient PDF report generation, list, metadata detail, file serving, and delete
-- frontend login placeholder page
+- backend login, logout, and current-user endpoints using session-cookie auth
+- frontend login form, current-user shell display, logout action, and protected dashboard routes
 - frontend dashboard shell
 - frontend patient list with search and pagination
 - frontend patient details page
@@ -100,8 +104,10 @@ Example local values are available in:
 
 ## Current Limitations
 
-- authentication and authorization are not implemented yet
 - patient deletion is currently hard delete
+- there is no user management admin UI yet
+- local user bootstrap is environment-driven and intended for development setup
+- CSRF protection is intentionally deferred for the current local-first JSON API baseline
 - anamnesis does not yet support conditional questions
 - anamnesis template editing uses a safe future-only policy, but there is no full template version history yet
 - scoring rules are intentionally MVP-only and do not yet support versioning or advanced formulas
@@ -112,6 +118,34 @@ Example local values are available in:
 - first PDF export is implemented, but report theming and template versioning are not
 - WhatsApp integration is still not implemented
 - backend integration tests now use embedded PostgreSQL plus Flyway instead of an H2 smoke path
+
+## Local Authentication Setup
+
+The backend uses Spring Security sessions with an HttpOnly cookie. The frontend sends requests with credentials included, and server-rendered dashboard pages forward the incoming cookie to the backend when loading protected data.
+
+Roles are seeded by Flyway:
+
+- `ADMIN`
+- `CLINICIAN`
+- `STAFF`
+
+To create the first local admin, set these variables before starting the backend:
+
+- `APP_SECURITY_BOOTSTRAP_ADMIN_EMAIL=admin@example.com`
+- `APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD=change-this-local-password`
+- `APP_SECURITY_BOOTSTRAP_ADMIN_FULL_NAME=Local Administrator`
+
+The bootstrap runner hashes the password with BCrypt and creates or updates only that configured local admin account. If email or password is missing, no user is created. Do not commit real credentials to the repository.
+
+Public endpoints:
+
+- `POST /api/auth/login`
+- `GET /api/health`
+- `GET /actuator/health`
+
+All patient, anamnesis, scoring, media, and report endpoints require authentication. `STAFF` can use patient, patient anamnesis, media, and report flows, but cannot edit anamnesis templates or access scoring routes.
+
+CSRF is disabled for this local-first JSON API baseline and paired with SameSite `Lax` session cookies. Revisit CSRF protection before exposing the app beyond trusted local development.
 
 ## Patient List Behavior
 
@@ -241,16 +275,17 @@ Classification thresholds:
 1. Install PostgreSQL locally.
 2. Create the database:
    `psql -U postgres -c "CREATE DATABASE trichology_clinic;"`
-3. Export the backend variables from `apps/backend/.env.example`, or set equivalent values in your shell.
+3. Export the backend variables from `apps/backend/.env.example`, including local bootstrap admin values if this is your first login.
 4. Start the backend from `apps/backend`:
    `mvn spring-boot:run`
-5. Flyway will create the schema on a clean database before Spring Data repositories initialize.
+5. Flyway will create the schema and seed auth roles on a clean database before Spring Data repositories initialize.
+6. Log in from `http://localhost:3000/login` using the local bootstrap admin credentials you provided.
 
 ## Migration Rules
 
 - Migration files live in `apps/backend/src/main/resources/db/migration`
-- The project starts with a single baseline: `V1__baseline_schema.sql`
-- Future schema changes must be added as new versioned migrations such as `V2__add_x.sql`
+- The project starts with `V1__baseline_schema.sql`, followed by incremental migrations such as the auth role seed
+- Future schema changes must be added as new versioned migrations such as `V3__add_x.sql`
 - Do not edit an already-applied migration in shared use; create the next migration instead
 - Hibernate runs with `ddl-auto=validate`, so mismatches now fail startup instead of silently changing tables
 - `baseline-on-migrate=true` exists to help adopt an already-existing local schema created before Flyway was added
@@ -280,6 +315,7 @@ What the integration tests do:
 
 Critical workflows covered:
 
+- authentication login, invalid login, protected endpoint access, unauthenticated rejection, role-based forbidden access, and logout
 - patient CRUD plus duplicate email rejection
 - anamnesis template lifecycle and safe-editing rules
 - patient anamnesis creation, validation, snapshot persistence, and history retrieval

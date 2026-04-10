@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getPatient, getPatientPhotos } from "@/lib/api";
+import { getServerPatient, getServerPatientPhotos } from "@/lib/server-api";
 import { BeforeAfterComparison } from "@/components/media/before-after-comparison";
 
 type PatientPhotoComparePageProps = {
@@ -13,8 +13,8 @@ export default async function PatientPhotoComparePage({
 }: PatientPhotoComparePageProps) {
   try {
     const [patient, photos] = await Promise.all([
-      getPatient(params.id),
-      getPatientPhotos(params.id),
+      getServerPatient(params.id),
+      getServerPatientPhotos(params.id),
     ]);
 
     return (

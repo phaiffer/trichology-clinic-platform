@@ -1,8 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { getPatient, getPatientPhotoFileUrl, getPatientPhotos } from "@/lib/api";
+import { getPatientPhotoFileUrl } from "@/lib/api";
 import { PhotoCategoryBadge } from "@/components/media/photo-category-badge";
 import { PhotoCategory } from "@/lib/types";
+import { getServerPatient, getServerPatientPhotos } from "@/lib/server-api";
 
 type PatientPhotosPageProps = {
   params: {
@@ -45,8 +46,8 @@ export default async function PatientPhotosPage({
 
   try {
     const [patient, photos] = await Promise.all([
-      getPatient(params.id),
-      getPatientPhotos(params.id, selectedCategory),
+      getServerPatient(params.id),
+      getServerPatientPhotos(params.id, selectedCategory),
     ]);
     const patientName = `${patient.firstName} ${patient.lastName}`;
 

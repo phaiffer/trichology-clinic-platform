@@ -4,7 +4,8 @@
 
 - Add the first incremental Flyway migration after the baseline instead of changing `V1__baseline_schema.sql`
 - Expand backend integration coverage around edge cases such as concurrent updates, storage failure rollback, and larger report/media payloads
-- Finish authentication with login flow and session strategy
+- Add a small admin-only user management UI for creating and managing clinic users
+- Add CSRF protection or an equivalent browser request protection layer before non-local deployment
 - Decide when the project is mature enough to replace hard delete with soft delete plus audit support
 - Add explicit template version history and score rule versioning on top of the implemented safe future-only editing workflow
 - Decide when conditional question logic becomes necessary for anamnesis templates
@@ -26,5 +27,4 @@
 
 ## Phase 4
 
-- Add role-based authorization
 - Add broader frontend test coverage, observability, and delivery pipeline

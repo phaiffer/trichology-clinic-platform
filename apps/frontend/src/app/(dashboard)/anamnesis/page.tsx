@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getAnamnesisTemplates } from "@/lib/api";
+import { canManageTemplates, requireAuthenticatedUser } from "@/lib/auth";
+import { getServerAnamnesisTemplates } from "@/lib/server-api";
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en-US").format(new Date(value));
@@ -7,7 +8,9 @@ function formatDate(value: string) {
 
 export default async function AnamnesisTemplatesPage() {
   try {
-    const templates = await getAnamnesisTemplates();
+    const currentUser = await requireAuthenticatedUser();
+    const templates = await getServerAnamnesisTemplates();
+    const canCreateTemplates = canManageTemplates(currentUser);
 
     return (
       <section className="space-y-6">
@@ -25,12 +28,14 @@ export default async function AnamnesisTemplatesPage() {
             </p>
           </div>
 
-          <Link
-            href="/anamnesis/templates/new"
-            className="inline-flex rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-900"
-          >
-            New template
-          </Link>
+          {canCreateTemplates ? (
+            <Link
+              href="/anamnesis/templates/new"
+              className="inline-flex rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-900"
+            >
+              New template
+            </Link>
+          ) : null}
         </div>
 
         {templates.length === 0 ? (
@@ -96,4 +101,3 @@ export default async function AnamnesisTemplatesPage() {
     );
   }
 }
-

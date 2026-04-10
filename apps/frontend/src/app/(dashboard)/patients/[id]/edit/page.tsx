@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getPatient } from "@/lib/api";
+import { getServerPatient } from "@/lib/server-api";
 import { PatientForm } from "@/components/patients/patient-form";
 import { PatientInput } from "@/lib/types";
 
@@ -9,7 +9,7 @@ type EditPatientPageProps = {
   };
 };
 
-function toPatientInput(patient: Awaited<ReturnType<typeof getPatient>>): PatientInput {
+function toPatientInput(patient: Awaited<ReturnType<typeof getServerPatient>>): PatientInput {
   return {
     firstName: patient.firstName,
     lastName: patient.lastName,
@@ -25,7 +25,7 @@ function toPatientInput(patient: Awaited<ReturnType<typeof getPatient>>): Patien
 
 export default async function EditPatientPage({ params }: EditPatientPageProps) {
   try {
-    const patient = await getPatient(params.id);
+    const patient = await getServerPatient(params.id);
 
     return (
       <section className="space-y-6">
@@ -71,4 +71,3 @@ export default async function EditPatientPage({ params }: EditPatientPageProps) 
     );
   }
 }
-

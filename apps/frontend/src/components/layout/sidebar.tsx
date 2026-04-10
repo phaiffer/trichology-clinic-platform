@@ -1,16 +1,33 @@
 import Link from "next/link";
+import { AuthenticatedUser } from "@/lib/types";
 
-const navItems = [
+type NavItem = {
+  href: string;
+  label: string;
+  hiddenForRoles?: AuthenticatedUser["roles"];
+};
+
+const navItems: NavItem[] = [
   { href: "/", label: "Dashboard" },
   { href: "/patients", label: "Patients" },
   { href: "/anamnesis", label: "Anamnesis" },
   { href: "/photos", label: "Photos" },
-  { href: "/scoring", label: "Scoring" },
+  { href: "/scoring", label: "Scoring", hiddenForRoles: ["STAFF"] },
   { href: "/reports", label: "Reports" },
   { href: "/reminders", label: "Reminders" },
 ];
 
-export function Sidebar() {
+type SidebarProps = {
+  currentUser: AuthenticatedUser;
+};
+
+export function Sidebar({ currentUser }: SidebarProps) {
+  const visibleNavItems = navItems.filter(
+    (item) =>
+      !item.hiddenForRoles ||
+      !currentUser.roles.some((role) => item.hiddenForRoles?.includes(role)),
+  );
+
   return (
     <aside className="flex min-h-screen w-full max-w-64 flex-col border-r border-brand-100 bg-white">
       <div className="border-b border-brand-100 px-6 py-6">
@@ -26,7 +43,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map((item) => (
+        {visibleNavItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
@@ -39,4 +56,3 @@ export function Sidebar() {
     </aside>
   );
 }
-

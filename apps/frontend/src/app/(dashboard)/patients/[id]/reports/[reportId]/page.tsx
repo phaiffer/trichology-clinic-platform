@@ -1,12 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import {
-  getPatient,
   getPatientPhotoFileUrl,
-  getPatientReport,
   getPatientReportFileUrl,
 } from "@/lib/api";
 import { DeleteReportButton } from "@/components/reports/delete-report-button";
+import { getServerPatient, getServerPatientReport } from "@/lib/server-api";
 
 type PatientReportDetailsPageProps = {
   params: {
@@ -35,8 +34,8 @@ export default async function PatientReportDetailsPage({
 }: PatientReportDetailsPageProps) {
   try {
     const [patient, report] = await Promise.all([
-      getPatient(params.id),
-      getPatientReport(params.id, params.reportId),
+      getServerPatient(params.id),
+      getServerPatientReport(params.id, params.reportId),
     ]);
 
     return (

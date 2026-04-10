@@ -1,3 +1,12 @@
+export type UserRole = "ADMIN" | "CLINICIAN" | "STAFF";
+
+export type AuthenticatedUser = {
+  id: number;
+  email: string;
+  fullName: string;
+  roles: UserRole[];
+};
+
 export type Patient = {
   id: string;
   firstName: string;

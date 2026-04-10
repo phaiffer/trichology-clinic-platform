@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { AnamnesisTemplateForm } from "@/components/anamnesis/anamnesis-template-form";
+import { requireAnyRole } from "@/lib/auth";
 
-export default function NewAnamnesisTemplatePage() {
+export default async function NewAnamnesisTemplatePage() {
+  await requireAnyRole(["ADMIN", "CLINICIAN"]);
+
   return (
     <section className="space-y-6">
       <div className="rounded-[2rem] border border-brand-100 bg-white p-8 shadow-sm">
@@ -21,4 +24,3 @@ export default function NewAnamnesisTemplatePage() {
     </section>
   );
 }
-

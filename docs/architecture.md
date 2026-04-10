@@ -22,7 +22,7 @@ This gives a clean upgrade path to stricter hexagonal boundaries later without i
 ### Current Backend Modules
 
 - `shared`: cross-cutting configuration, health endpoint, and exception handling
-- `auth`: foundation entities for user and role
+- `auth`: implemented user, role, password-hash, session login, logout, current-user, and local bootstrap support
 - `patient`: implemented vertical slice with CRUD, search, pagination, and email uniqueness checks
 - `anamnesis`: implemented template and patient record foundation
 - `media`: implemented patient photo metadata, local storage abstraction, upload, listing, detail, file serving, and delete flow
@@ -41,7 +41,8 @@ The frontend uses the Next.js App Router with:
 
 ### Current Frontend Routes
 
-- `/login`: placeholder login page
+- `/login`: real backend-connected login page
+- `/forbidden`: simple unauthorized-access page
 - `/`: dashboard home inside the dashboard shell
 - `/patients`: patient list with search and pagination
 - `/patients/new`: patient creation form
@@ -64,6 +65,33 @@ The frontend uses the Next.js App Router with:
 - `/scoring`: placeholder landing page, with real score workflows exposed through patient APIs and patient routes
 - `/reports`: simple patient-first reports landing page
 - `/reminders`: placeholder
+
+## Authentication And Authorization
+
+The first real auth baseline uses Spring Security with server-side sessions and HttpOnly cookies instead of storing bearer tokens in `localStorage`. That keeps browser-side credential exposure lower while preserving a simple local-first development workflow.
+
+Implemented backend auth endpoints:
+
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
+
+Public routes are intentionally narrow:
+
+- login
+- application health endpoints
+
+Everything else is authenticated by default. Module authorization is role-based:
+
+- `ADMIN`: full access to current modules
+- `CLINICIAN`: patient, anamnesis template management, patient anamnesis records, scoring, media, and reports
+- `STAFF`: patient access, patient anamnesis usage, media, and reports; no anamnesis template editing and no scoring routes
+
+Roles are seeded by Flyway. The first local admin is created or updated only when `APP_SECURITY_BOOTSTRAP_ADMIN_EMAIL` and `APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD` are provided. Passwords are stored as BCrypt hashes.
+
+CSRF is disabled in this local-first JSON API baseline because the frontend and backend are developed as one trusted local application using SameSite `Lax` session cookies. Before non-local deployment, the security layer should add CSRF protection or an equivalent documented browser request protection strategy.
+
+The frontend protects dashboard routes by resolving `/api/auth/me` on the server, redirecting unauthenticated users to `/login`, and forwarding cookies for server-rendered data requests. The app shell displays the current user and exposes logout. Role-aware UI hides template-editing actions and scoring surfaces from `STAFF`.
 
 ## Local-First Persistence
 
@@ -95,10 +123,11 @@ The report module now follows the same local-first split:
 
 ## Security Baseline
 
-- Spring Security enabled from day one
-- health endpoints are always open
-- bootstrap mode can keep application endpoints open through configuration
-- password encoder available for future auth flows
+- Spring Security protects application endpoints by default
+- health endpoints and login are public
+- server-side session auth uses an HttpOnly cookie
+- user passwords are hashed with BCrypt
+- local admin bootstrap is opt-in through environment variables
 - CORS restricted by environment configuration
 - consent fields included in patient aggregate
 - duplicate patient email is handled explicitly as a conflict
@@ -249,10 +278,12 @@ The current codebase already supports:
 - patient score calculation from anamnesis, score history, and score detail viewing
 - patient report generation, listing, detail, open/download, and delete
 - dashboard structure for future modules
+- session-cookie authentication and role-aware dashboard access
 
 ## Evolution Paths
 
-- Replace open patient endpoints with authenticated role-based access
+- Add a small admin-only user management UI
+- Add CSRF protection or an equivalent browser request protection layer before non-local deployment
 - Introduce object storage adapters for photos
 - Add explicit template version history and score rule version history when audit-grade edit lineage becomes necessary
 - Add report template versions and presentation refinements

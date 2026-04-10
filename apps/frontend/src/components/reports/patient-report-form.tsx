@@ -17,6 +17,7 @@ type PatientReportFormProps = {
   anamnesisRecords: PatientAnamnesisRecordListItem[];
   scoreResults: ScoreResult[];
   photos: PatientPhoto[];
+  canUseScoring: boolean;
 };
 
 const initialState: PatientReportInput = {
@@ -46,6 +47,7 @@ export function PatientReportForm({
   anamnesisRecords,
   scoreResults,
   photos,
+  canUseScoring,
 }: PatientReportFormProps) {
   const router = useRouter();
   const [form, setForm] = useState<PatientReportInput>({
@@ -179,25 +181,31 @@ export function PatientReportForm({
             </select>
           </label>
 
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-slate-700">Score result</span>
-            <select
-              value={form.scoreResultId ?? ""}
-              onChange={(event) =>
-                updateField("scoreResultId", event.target.value || null)
-              }
-              className="w-full rounded-2xl border border-brand-100 px-4 py-3 outline-none transition focus:border-brand-500"
-            >
-              <option value="">No score result selected</option>
-              {scoreResults.map((score) => (
-                <option key={score.id} value={score.id}>
-                  {score.anamnesisTemplateName || "Legacy score"} •{" "}
-                  {score.totalScore.toFixed(2)}
-                  {score.classification ? ` • ${score.classification}` : ""}
-                </option>
-              ))}
-            </select>
-          </label>
+          {canUseScoring ? (
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-slate-700">Score result</span>
+              <select
+                value={form.scoreResultId ?? ""}
+                onChange={(event) =>
+                  updateField("scoreResultId", event.target.value || null)
+                }
+                className="w-full rounded-2xl border border-brand-100 px-4 py-3 outline-none transition focus:border-brand-500"
+              >
+                <option value="">No score result selected</option>
+                {scoreResults.map((score) => (
+                  <option key={score.id} value={score.id}>
+                    {score.anamnesisTemplateName || "Legacy score"} •{" "}
+                    {score.totalScore.toFixed(2)}
+                    {score.classification ? ` • ${score.classification}` : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <div className="rounded-2xl border border-brand-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              Score selection is available only for clinician and admin accounts.
+            </div>
+          )}
         </div>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">

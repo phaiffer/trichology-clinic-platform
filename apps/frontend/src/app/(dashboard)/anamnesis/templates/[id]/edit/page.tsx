@@ -1,14 +1,17 @@
 import Link from "next/link";
 import { AnamnesisTemplateForm } from "@/components/anamnesis/anamnesis-template-form";
-import { getAnamnesisTemplate } from "@/lib/api";
+import { requireAnyRole } from "@/lib/auth";
+import { getServerAnamnesisTemplate } from "@/lib/server-api";
 
 export default async function EditAnamnesisTemplatePage({
   params,
 }: {
   params: { id: string };
 }) {
+  await requireAnyRole(["ADMIN", "CLINICIAN"]);
+
   try {
-    const template = await getAnamnesisTemplate(params.id);
+    const template = await getServerAnamnesisTemplate(params.id);
 
     return (
       <section className="space-y-6">

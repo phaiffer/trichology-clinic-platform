@@ -1,14 +1,17 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import {
-  getPatient,
-  getPatientAnamnesisRecords,
   getPatientPhotoFileUrl,
-  getPatientPhotos,
   getPatientReportFileUrl,
-  getPatientReports,
-  getPatientScoreResults,
 } from "@/lib/api";
+import { canAccessScoring, requireAuthenticatedUser } from "@/lib/auth";
+import {
+  getServerPatient,
+  getServerPatientAnamnesisRecords,
+  getServerPatientPhotos,
+  getServerPatientReports,
+  getServerPatientScoreResults,
+} from "@/lib/server-api";
 import { PhotoCategoryBadge } from "@/components/media/photo-category-badge";
 import { DeletePatientButton } from "@/components/patients/delete-patient-button";
 import { DeleteReportButton } from "@/components/reports/delete-report-button";
@@ -35,13 +38,17 @@ export default async function PatientDetailsPage({
   params,
 }: PatientDetailsPageProps) {
   try {
-    const [patient, anamnesisRecords, reports, scoreResults] = await Promise.all([
-      getPatient(params.id),
-      getPatientAnamnesisRecords(params.id),
-      getPatientReports(params.id),
-      getPatientScoreResults(params.id),
+    const currentUser = await requireAuthenticatedUser();
+    const canViewScoring = canAccessScoring(currentUser);
+    const [patient, anamnesisRecords, reports, patientPhotos] = await Promise.all([
+      getServerPatient(params.id),
+      getServerPatientAnamnesisRecords(params.id),
+      getServerPatientReports(params.id),
+      getServerPatientPhotos(params.id),
     ]);
-    const patientPhotos = await getPatientPhotos(params.id);
+    const scoreResults = canViewScoring
+      ? await getServerPatientScoreResults(params.id)
+      : [];
 
     const patientName = `${patient.firstName} ${patient.lastName}`;
     const recentPhotos = patientPhotos.slice(0, 4);
@@ -229,49 +236,51 @@ export default async function PatientDetailsPage({
               )}
             </div>
 
-            <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-brand-900">Score history</h2>
-                  <p className="mt-2 text-sm text-slate-600">
-                    Native score results calculated from stored anamnesis submissions.
-                  </p>
+            {canViewScoring ? (
+              <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-brand-900">Score history</h2>
+                    <p className="mt-2 text-sm text-slate-600">
+                      Native score results calculated from stored anamnesis submissions.
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              {scoreResults.length === 0 ? (
-                <div className="mt-4 rounded-3xl border border-dashed border-brand-100 px-4 py-6 text-sm text-slate-500">
-                  No score results generated for this patient yet.
-                </div>
-              ) : (
-                <div className="mt-4 space-y-3">
-                  {scoreResults.map((score) => (
-                    <div
-                      key={score.id}
-                      className="flex flex-col gap-3 rounded-3xl border border-brand-100 p-4 md:flex-row md:items-center md:justify-between"
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-brand-900">
-                          {score.anamnesisTemplateName || "Legacy score"}
-                        </p>
-                        <p className="mt-1 text-sm text-slate-500">
-                          {score.totalScore.toFixed(2)} •{" "}
-                          {score.classification || "UNCLASSIFIED"} •{" "}
-                          {formatDate(score.calculatedAt)}
-                        </p>
-                      </div>
-
-                      <Link
-                        href={`/patients/${patient.id}/scores/${score.id}`}
-                        className="text-sm font-medium text-brand-700 transition hover:text-brand-900"
+                {scoreResults.length === 0 ? (
+                  <div className="mt-4 rounded-3xl border border-dashed border-brand-100 px-4 py-6 text-sm text-slate-500">
+                    No score results generated for this patient yet.
+                  </div>
+                ) : (
+                  <div className="mt-4 space-y-3">
+                    {scoreResults.map((score) => (
+                      <div
+                        key={score.id}
+                        className="flex flex-col gap-3 rounded-3xl border border-brand-100 p-4 md:flex-row md:items-center md:justify-between"
                       >
-                        View score details
-                      </Link>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                        <div>
+                          <p className="text-sm font-semibold text-brand-900">
+                            {score.anamnesisTemplateName || "Legacy score"}
+                          </p>
+                          <p className="mt-1 text-sm text-slate-500">
+                            {score.totalScore.toFixed(2)} •{" "}
+                            {score.classification || "UNCLASSIFIED"} •{" "}
+                            {formatDate(score.calculatedAt)}
+                          </p>
+                        </div>
+
+                        <Link
+                          href={`/patients/${patient.id}/scores/${score.id}`}
+                          className="text-sm font-medium text-brand-700 transition hover:text-brand-900"
+                        >
+                          View score details
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : null}
 
             <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between gap-4">

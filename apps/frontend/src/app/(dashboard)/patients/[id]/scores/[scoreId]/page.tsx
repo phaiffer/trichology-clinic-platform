@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getPatientScoreResult } from "@/lib/api";
+import { requireAnyRole } from "@/lib/auth";
+import { getServerPatientScoreResult } from "@/lib/server-api";
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en-US", {
@@ -13,8 +14,10 @@ export default async function PatientScoreDetailsPage({
 }: {
   params: { id: string; scoreId: string };
 }) {
+  await requireAnyRole(["ADMIN", "CLINICIAN"]);
+
   try {
-    const score = await getPatientScoreResult(params.id, params.scoreId);
+    const score = await getServerPatientScoreResult(params.id, params.scoreId);
 
     return (
       <section className="space-y-6">

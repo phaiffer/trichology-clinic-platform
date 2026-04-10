@@ -43,9 +43,31 @@ It is intentionally small, but already organized for professional evolution:
 - native patient score calculation, persistence, history, and details linked to anamnesis submissions
 - patient clinical PDF report generation with local disk storage and database metadata
 - patient report listing, details, open/download, and delete flow
+- secure session-cookie authentication with login, logout, and current-user endpoints
+- explicit `ADMIN`, `CLINICIAN`, and `STAFF` roles seeded through Flyway
+- role-aware backend authorization and frontend route protection
 - dashboard shell with sidebar and header
 - photo module overview page plus placeholder reminders page
-- foundational backend entities for auth
+
+## Auth Endpoints
+
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
+
+## Authentication And Authorization
+
+The app now uses Spring Security with server-side HTTP sessions and an HttpOnly session cookie. This keeps credentials and session material out of browser `localStorage`, which is a better baseline for sensitive clinical data while staying simple for local development.
+
+Public endpoints are limited to login and health checks. Patient, anamnesis, scoring, media, and report routes require authentication.
+
+Role policy:
+
+- `ADMIN`: full access to current modules
+- `CLINICIAN`: patient, anamnesis template management, patient anamnesis records, scoring, media, and reports
+- `STAFF`: patient access, patient anamnesis usage, media, and reports; no anamnesis template editing and no scoring access
+
+CSRF is currently disabled because the frontend and backend communicate as a same-project JSON API using SameSite `Lax` session cookies. Before exposing the app outside trusted local development, add CSRF protection or a documented equivalent browser request protection layer.
 
 ## Patient Endpoints
 
@@ -225,26 +247,31 @@ Frontend example:
 ## Local Run Steps
 
 1. Copy `apps/backend/.env.example` values into your local environment as needed.
-2. Copy `apps/frontend/.env.local.example` to `apps/frontend/.env.local` if you want to override the default frontend API URL.
-3. Create the local PostgreSQL database once:
+2. Set a local bootstrap admin only for your development machine:
+   `APP_SECURITY_BOOTSTRAP_ADMIN_EMAIL=admin@example.com`
+   `APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD=change-this-local-password`
+   `APP_SECURITY_BOOTSTRAP_ADMIN_FULL_NAME=Local Administrator`
+3. Copy `apps/frontend/.env.local.example` to `apps/frontend/.env.local` if you want to override the default frontend API URL.
+4. Create the local PostgreSQL database once:
    `psql -U postgres -c "CREATE DATABASE trichology_clinic;"`
-4. Start the backend:
+5. Start the backend:
    `cd apps/backend`
    `mvn spring-boot:run`
-5. Start the frontend in another terminal:
+6. Start the frontend in another terminal:
    `cd apps/frontend`
    `npm install`
    `npm run dev`
-6. Open `http://localhost:3000`
+7. Open `http://localhost:3000` and log in with the local bootstrap admin credentials you provided.
 
 Flyway runs automatically during backend startup.
-On a clean database it applies `V1__baseline_schema.sql`.
+On a clean database it applies the baseline schema and the auth role seed migration.
 If you already have a local schema created before Flyway was introduced, `baseline-on-migrate=true` lets the app adopt it without re-running the baseline migration.
 
 ## Current Limitations
 
-- authentication is only scaffolded, not implemented
 - patient deletion is currently a hard delete
+- there is no user management admin UI yet; local admin bootstrap is environment-driven
+- CSRF protection is intentionally deferred for the current local-first JSON API baseline
 - anamnesis does not yet support conditional logic
 - anamnesis answers can now generate native score history, but the scoring logic is still an MVP rule set
 - template editing is intentionally pragmatic: there is no full template versioning or audit diff model yet
@@ -255,6 +282,7 @@ If you already have a local schema created before Flyway was introduced, `baseli
 - the first PDF report is structured and professional, but does not yet support branded theming, report template versions, or rich pagination controls
 - local development now assumes PostgreSQL is installed and available outside the monorepo
 - backend integration tests now cover the main patient, anamnesis, scoring, media, and report workflows, but they do not yet cover concurrent edit races or external integrations
+- backend integration tests now also cover login, invalid login, protected-route access, unauthenticated rejection, role-based forbidden behavior, and logout
 - no automated frontend test suite yet
 - no in-browser PDF preview rendering beyond opening or downloading the file
 - no WhatsApp integration yet
@@ -269,6 +297,7 @@ The backend now includes high-value integration coverage for the most regression
 - score calculation, persistence, history retrieval, get by id, ownership validation, and stored itemized detail stability
 - patient photo metadata upload with local file persistence, invalid type rejection, list/detail retrieval, ownership validation, and delete cleanup
 - report generation, selected anamnesis/score/photo ownership validation, metadata persistence, PDF file creation, retrieval, and delete cleanup
+- authentication login, invalid login rejection, authenticated protected access, unauthenticated rejection, role-based forbidden access, and logout
 
 Test strategy:
 
@@ -288,7 +317,7 @@ The integration suite does not use Docker and does not bypass Flyway. It boots a
 ## Recommended Next Order
 
 1. Add Java 21, Maven, Node.js, and npm to the local machine if they are missing.
-2. Add authenticated access control around patient, anamnesis, and photo routes.
+2. Add a small admin-only user management UI for inviting or creating clinic users.
 3. Expand media with metadata editing, thumbnails, and future cloud object storage migration.
 4. Add explicit template and scoring version history once the clinic needs edit audit trails beyond the current safe future-only policy.
-5. Add the first post-baseline Flyway migration for seed auth data or the next real schema change instead of editing `V1__baseline_schema.sql`.
+5. Add CSRF protection or an equivalent browser request protection layer before non-local deployment.

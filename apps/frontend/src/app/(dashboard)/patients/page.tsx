@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getPatients } from "@/lib/api";
+import { getServerPatients } from "@/lib/server-api";
 import { PaginationControls } from "@/components/patients/pagination-controls";
 import { PatientSearchForm } from "@/components/patients/patient-search-form";
 
@@ -27,7 +27,7 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
   const size = normalizeSize(searchParams?.size);
 
   try {
-    const patientPage = await getPatients({ search, page, size });
+    const patientPage = await getServerPatients({ search, page, size });
 
     return (
       <section className="space-y-6">
@@ -126,4 +126,3 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
     );
   }
 }
-

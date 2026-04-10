@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getPatient, getPatientAnamnesisRecords } from "@/lib/api";
+import { getServerPatient, getServerPatientAnamnesisRecords } from "@/lib/server-api";
 import { PatientPhotoUploadForm } from "@/components/media/patient-photo-upload-form";
 
 type PatientPhotoUploadPageProps = {
@@ -13,8 +13,8 @@ export default async function PatientPhotoUploadPage({
 }: PatientPhotoUploadPageProps) {
   try {
     const [patient, anamnesisRecords] = await Promise.all([
-      getPatient(params.id),
-      getPatientAnamnesisRecords(params.id),
+      getServerPatient(params.id),
+      getServerPatientAnamnesisRecords(params.id),
     ]);
 
     return (
