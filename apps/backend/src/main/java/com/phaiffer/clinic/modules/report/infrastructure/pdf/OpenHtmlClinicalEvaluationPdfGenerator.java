@@ -6,15 +6,21 @@ import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 @Component
 public class OpenHtmlClinicalEvaluationPdfGenerator implements ClinicalEvaluationPdfGenerator {
 
-    private static final DateTimeFormatter DATE_FORMATTER =
-            DateTimeFormatter.ofPattern("MMM dd, yyyy").withZone(ZoneId.of("UTC"));
+    private static final Locale PT_BR = Locale.forLanguageTag("pt-BR");
+    private static final ZoneId REPORT_ZONE = ZoneId.of("America/Sao_Paulo");
+    private static final DateTimeFormatter DATE_TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm", PT_BR).withZone(REPORT_ZONE);
+    private static final DateTimeFormatter LOCAL_DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy", PT_BR);
 
     @Override
     public byte[] generate(ClinicalEvaluationPdfData data) {
@@ -34,7 +40,7 @@ public class OpenHtmlClinicalEvaluationPdfGenerator implements ClinicalEvaluatio
 
     private String buildHtml(ClinicalEvaluationPdfData data) {
         return """
-                <html>
+                <html lang="pt-BR">
                   <head>
                     <meta charset="UTF-8" />
                     <style>
@@ -44,17 +50,18 @@ public class OpenHtmlClinicalEvaluationPdfGenerator implements ClinicalEvaluatio
                       .page-header { border-bottom: 2px solid #0f766e; padding-bottom: 14px; margin-bottom: 18px; }
                       .eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #0f766e; }
                       .section { margin-top: 18px; }
-                      .section-title { font-size: 16px; font-weight: bold; color: #111827; margin-bottom: 8px; }
+                      .section-keep { margin-top: 18px; page-break-inside: avoid; }
+                      .section-title { font-size: 16px; font-weight: bold; color: #111827; margin-bottom: 8px; page-break-after: avoid; }
                       .meta-grid { width: 100%%; border-collapse: collapse; }
                       .meta-grid td { width: 50%%; vertical-align: top; padding: 6px 0; }
                       .label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 2px; }
                       .value { color: #111827; }
-                      .panel { border: 1px solid #d1d5db; border-radius: 8px; padding: 10px; background: #f8fafc; }
+                      .panel { border: 1px solid #d1d5db; border-radius: 8px; padding: 10px; background: #f8fafc; page-break-inside: avoid; }
                       .answer-table { width: 100%%; border-collapse: collapse; margin-top: 10px; }
                       .answer-table th, .answer-table td { border-bottom: 1px solid #e5e7eb; padding: 8px 6px; text-align: left; vertical-align: top; }
                       .answer-table th { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #475569; }
-                      .photo-block { page-break-inside: avoid; margin-top: 12px; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px; }
-                      .photo-block img { width: 100%%; max-height: 280px; object-fit: contain; margin-bottom: 8px; }
+                      .photo-block { page-break-inside: avoid; margin-top: 10px; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px; background: #ffffff; }
+                      .photo-block img { display: block; width: 100%%; max-height: 170px; margin-bottom: 8px; border-radius: 4px; }
                       .muted { color: #64748b; }
                     </style>
                   </head>
@@ -62,90 +69,90 @@ public class OpenHtmlClinicalEvaluationPdfGenerator implements ClinicalEvaluatio
                     <div class="page-header">
                       <p class="eyebrow">%s</p>
                       <h1 style="margin-top: 6px; font-size: 24px;">%s</h1>
-                      <p style="margin-top: 8px;" class="muted">Generated on %s</p>
+                      <p style="margin-top: 8px;" class="muted">Gerado em %s</p>
                     </div>
                     <div class="section">
-                      <h2 class="section-title">Patient identification</h2>
+                      <h2 class="section-title">Identificação do paciente</h2>
                       <table class="meta-grid">
                         <tr>
-                          <td><span class="label">Patient</span><span class="value">%s</span></td>
-                          <td><span class="label">Patient ID</span><span class="value">%s</span></td>
+                          <td><span class="label">Paciente</span><span class="value">%s</span></td>
+                          <td><span class="label">ID do paciente</span><span class="value">%s</span></td>
                         </tr>
                         <tr>
-                          <td><span class="label">Email</span><span class="value">%s</span></td>
-                          <td><span class="label">Phone</span><span class="value">%s</span></td>
+                          <td><span class="label">E-mail</span><span class="value">%s</span></td>
+                          <td><span class="label">Telefone</span><span class="value">%s</span></td>
                         </tr>
                         <tr>
-                          <td><span class="label">Birth date</span><span class="value">%s</span></td>
-                          <td><span class="label">Gender</span><span class="value">%s</span></td>
+                          <td><span class="label">Data de nascimento</span><span class="value">%s</span></td>
+                          <td><span class="label">Gênero</span><span class="value">%s</span></td>
                         </tr>
                       </table>
                     </div>
                     <div class="section">
-                      <h2 class="section-title">Clinical summary and observations</h2>
+                      <h2 class="section-title">Resumo clínico e observações</h2>
                       <div class="panel">
                         <p>%s</p>
                       </div>
                       <div class="panel" style="margin-top: 10px;">
-                        <span class="label">Patient notes</span>
+                        <span class="label">Observações do prontuário</span>
                         <p>%s</p>
                       </div>
                     </div>
                     <div class="section">
-                      <h2 class="section-title">Anamnesis summary</h2>
+                      <h2 class="section-title">Resumo da anamnese</h2>
                       <div class="panel">
-                        <p><strong>Template:</strong> %s</p>
-                        <p style="margin-top: 4px;"><strong>Recorded at:</strong> %s</p>
+                        <p><strong>Modelo:</strong> %s</p>
+                        <p style="margin-top: 4px;"><strong>Registrada em:</strong> %s</p>
                       </div>
                       %s
                     </div>
-                    <div class="section">
-                      <h2 class="section-title">Scoring summary</h2>
+                    <div class="section-keep">
+                      <h2 class="section-title">Resumo da pontuação</h2>
                       <div class="panel">
-                        <p><strong>Type:</strong> %s</p>
-                        <p style="margin-top: 4px;"><strong>Value:</strong> %s</p>
-                        <p style="margin-top: 4px;"><strong>Classification:</strong> %s</p>
-                        <p style="margin-top: 4px;"><strong>Calculated at:</strong> %s</p>
-                        <p style="margin-top: 8px;"><strong>Interpretation:</strong> %s</p>
+                        <p><strong>Tipo:</strong> %s</p>
+                        <p style="margin-top: 4px;"><strong>Pontuação total:</strong> %s</p>
+                        <p style="margin-top: 4px;"><strong>Classificação:</strong> %s</p>
+                        <p style="margin-top: 4px;"><strong>Calculada em:</strong> %s</p>
+                        <p style="margin-top: 8px;"><strong>Interpretação:</strong> %s</p>
                       </div>
                     </div>
                     <div class="section">
-                      <h2 class="section-title">Selected patient photos</h2>
+                      <h2 class="section-title">Fotos selecionadas do paciente</h2>
                       %s
                     </div>
                   </body>
                 </html>
                 """.formatted(
-                escapeHtml(data.clinicTitle()),
+                escapeHtml(formatClinicTitle(data.clinicTitle())),
                 escapeHtml(data.reportTitle()),
                 formatInstant(data.generatedAt()),
                 escapeHtml(data.patientName()),
                 escapeHtml(data.patientId().toString()),
                 escapeHtml(defaultText(data.patientEmail())),
                 escapeHtml(defaultText(data.patientPhone())),
-                escapeHtml(data.patientBirthDate() != null ? data.patientBirthDate().toString() : "-"),
-                escapeHtml(defaultText(data.patientGender())),
-                formatParagraph(data.clinicianSummary(), "No clinician summary was added for this report."),
-                formatParagraph(data.patientNotes(), "No patient notes were registered."),
+                escapeHtml(formatLocalDate(data.patientBirthDate())),
+                escapeHtml(formatGender(data.patientGender())),
+                formatParagraph(data.clinicianSummary(), "Nenhum resumo clínico foi adicionado a este relatório."),
+                formatParagraph(data.patientNotes(), "Nenhuma observação clínica cadastrada para o paciente."),
                 escapeHtml(defaultText(data.anamnesisTemplateName())),
                 escapeHtml(formatInstant(data.anamnesisCreatedAt())),
                 buildAnswersTable(data.anamnesisAnswers()),
-                escapeHtml(defaultText(data.scoreType())),
-                escapeHtml(data.scoreValue() != null ? String.format("%.2f", data.scoreValue()) : "-"),
-                escapeHtml(defaultText(data.scoreClassification())),
+                escapeHtml(formatScoreType(data.scoreType())),
+                escapeHtml(data.scoreValue() != null ? String.format(PT_BR, "%.2f", data.scoreValue()) : "-"),
+                escapeHtml(formatClassification(data.scoreClassification())),
                 escapeHtml(formatInstant(data.scoreCalculatedAt())),
-                formatParagraph(data.scoreInterpretation(), "No score interpretation was registered."),
+                formatParagraph(formatInterpretation(data.scoreInterpretation()), "Nenhuma interpretação de pontuação foi registrada."),
                 buildPhotoBlocks(data.photos())
         );
     }
 
     private String buildAnswersTable(List<ClinicalEvaluationPdfAnswerData> answers) {
         if (answers == null || answers.isEmpty()) {
-            return "<div class=\"panel\" style=\"margin-top: 10px;\"><p>No anamnesis record was selected for this report.</p></div>";
+            return "<div class=\"panel\" style=\"margin-top: 10px;\"><p>Nenhum registro de anamnese foi selecionado para este relatório.</p></div>";
         }
 
         StringBuilder builder = new StringBuilder();
-        builder.append("<table class=\"answer-table\"><thead><tr><th>Question</th><th>Answer</th></tr></thead><tbody>");
+        builder.append("<table class=\"answer-table\"><thead><tr><th>Pergunta</th><th>Resposta</th></tr></thead><tbody>");
 
         for (ClinicalEvaluationPdfAnswerData answer : answers) {
             builder.append("<tr><td>")
@@ -161,7 +168,7 @@ public class OpenHtmlClinicalEvaluationPdfGenerator implements ClinicalEvaluatio
 
     private String buildPhotoBlocks(List<ClinicalEvaluationPdfPhotoData> photos) {
         if (photos == null || photos.isEmpty()) {
-            return "<div class=\"panel\"><p>No patient photos were selected for this report.</p></div>";
+            return "<div class=\"panel\"><p>Nenhuma foto do paciente foi selecionada para este relatório.</p></div>";
         }
 
         StringBuilder builder = new StringBuilder();
@@ -175,17 +182,17 @@ public class OpenHtmlClinicalEvaluationPdfGenerator implements ClinicalEvaluatio
                     .append(";base64,")
                     .append(photo.base64Content())
                     .append("\" />")
-                    .append("<p><strong>File:</strong> ")
+                    .append("<p><strong>Arquivo:</strong> ")
                     .append(escapeHtml(photo.originalFileName()))
                     .append("</p>")
-                    .append("<p style=\"margin-top: 4px;\"><strong>Category:</strong> ")
-                    .append(escapeHtml(photo.category()))
+                    .append("<p style=\"margin-top: 4px;\"><strong>Categoria:</strong> ")
+                    .append(escapeHtml(formatPhotoCategory(photo.category())))
                     .append("</p>")
-                    .append("<p style=\"margin-top: 4px;\"><strong>Capture date:</strong> ")
-                    .append(escapeHtml(photo.captureDate() != null ? photo.captureDate().toString() : "-"))
+                    .append("<p style=\"margin-top: 4px;\"><strong>Data da captura:</strong> ")
+                    .append(escapeHtml(formatLocalDate(photo.captureDate())))
                     .append("</p>")
-                    .append("<p style=\"margin-top: 8px;\"><strong>Notes:</strong> ")
-                    .append(formatParagraph(photo.notes(), "No photo notes were registered."))
+                    .append("<p style=\"margin-top: 8px;\"><strong>Observações:</strong> ")
+                    .append(formatParagraph(photo.notes(), "Nenhuma observação registrada para a foto."))
                     .append("</p>")
                     .append("</div>");
         }
@@ -194,7 +201,85 @@ public class OpenHtmlClinicalEvaluationPdfGenerator implements ClinicalEvaluatio
     }
 
     private String formatInstant(Instant instant) {
-        return instant == null ? "-" : DATE_FORMATTER.format(instant);
+        return instant == null ? "-" : DATE_TIME_FORMATTER.format(instant);
+    }
+
+    private String formatLocalDate(LocalDate date) {
+        return date == null ? "-" : LOCAL_DATE_FORMATTER.format(date);
+    }
+
+    private String formatClinicTitle(String title) {
+        if (title == null || title.isBlank()) {
+            return "PhaifferTech • Clínica de Tricologia";
+        }
+        if ("Phaiffer Tech Trichology Clinic".equalsIgnoreCase(title.trim())) {
+            return "PhaifferTech • Clínica de Tricologia";
+        }
+        return title;
+    }
+
+    private String formatGender(String gender) {
+        if (gender == null || gender.isBlank()) {
+            return "-";
+        }
+        return switch (gender.trim().toUpperCase(Locale.ROOT)) {
+            case "FEMALE", "F", "FEMININO" -> "Feminino";
+            case "MALE", "M", "MASCULINO" -> "Masculino";
+            case "NON_BINARY", "NAO_BINARIO", "NÃO BINÁRIO" -> "Não binário";
+            case "OTHER", "OUTRO" -> "Outro";
+            case "PREFER_NOT_TO_SAY", "PREFIRO_NAO_INFORMAR" -> "Prefiro não informar";
+            default -> gender;
+        };
+    }
+
+    private String formatClassification(String classification) {
+        if (classification == null || classification.isBlank()) {
+            return "-";
+        }
+        return switch (classification.trim().toUpperCase(Locale.ROOT)) {
+            case "LOW" -> "Baixo";
+            case "MODERATE" -> "Moderado";
+            case "HIGH" -> "Alto";
+            case "UNCLASSIFIED" -> "Sem classificação";
+            default -> classification;
+        };
+    }
+
+    private String formatScoreType(String scoreType) {
+        if (scoreType == null || scoreType.isBlank()) {
+            return "-";
+        }
+        if (scoreType.endsWith(" score")) {
+            return "Pontuação — " + scoreType.substring(0, scoreType.length() - 6);
+        }
+        return scoreType;
+    }
+
+    private String formatInterpretation(String interpretation) {
+        if (interpretation == null || interpretation.isBlank()) {
+            return null;
+        }
+        String formatted = interpretation
+                .replace("Calculated from ", "Calculada a partir de ")
+                .replace(" scored answers in template ", " respostas pontuadas no modelo ")
+                .replace("Highest contribution: ", "Maior contribuição: ")
+                .replace("No contributing question details were stored.", "Nenhum detalhe de pergunta contribuinte foi armazenado.")
+                .replace("Classification: LOW.", "Classificação: Baixo.")
+                .replace("Classification: MODERATE.", "Classificação: Moderado.")
+                .replace("Classification: HIGH.", "Classificação: Alto.");
+        return formatted.replaceAll("(\\d+)\\.(\\d{2})", "$1,$2");
+    }
+
+    private String formatPhotoCategory(String category) {
+        if (category == null || category.isBlank()) {
+            return "-";
+        }
+        return switch (category.trim().toUpperCase(Locale.ROOT)) {
+            case "BEFORE" -> "Antes";
+            case "AFTER" -> "Depois";
+            case "PROGRESS" -> "Evolução";
+            default -> category;
+        };
     }
 
     private String defaultText(String value) {

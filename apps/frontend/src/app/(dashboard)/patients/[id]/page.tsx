@@ -6,6 +6,14 @@ import {
 } from "@/lib/api";
 import { canAccessScoring, requireAuthenticatedUser } from "@/lib/auth";
 import {
+  formatDate,
+  formatDateTime,
+  formatDecimal,
+  formatGender,
+  formatReportType,
+  formatScoreClassification,
+} from "@/lib/formatters";
+import {
   getServerPatient,
   getServerPatientAnamnesisRecords,
   getServerPatientPhotos,
@@ -21,18 +29,6 @@ type PatientDetailsPageProps = {
     id: string;
   };
 };
-
-function formatDate(value: string | null) {
-  if (!value) {
-    return "-";
-  }
-
-  const normalizedValue = /^\d{4}-\d{2}-\d{2}$/.test(value)
-    ? `${value}T12:00:00`
-    : value;
-
-  return new Intl.DateTimeFormat("en-US").format(new Date(normalizedValue));
-}
 
 export default async function PatientDetailsPage({
   params,
@@ -55,99 +51,109 @@ export default async function PatientDetailsPage({
 
     return (
       <section className="space-y-6">
-        <div className="rounded-[2rem] border border-brand-100 bg-white p-8 shadow-sm">
+        <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm sm:p-8">
           <Link href="/patients" className="text-sm font-medium text-brand-700">
-            Back to patients
+            Voltar para pacientes
           </Link>
           <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-brand-500">
-                Patient details
+                Prontuário do paciente
               </p>
-              <h1 className="mt-2 text-3xl font-semibold text-brand-900">
+              <h1 className="mt-2 text-2xl font-semibold text-brand-900 sm:text-3xl">
                 {patientName}
               </h1>
               <p className="mt-3 max-w-2xl text-slate-600">
-                Review the patient record, start a new anamnesis, and inspect existing
-                intake history before later clinical modules build on top of it.
+                Consulte os dados cadastrais, inicie uma nova anamnese e acompanhe o
+                histórico de avaliações, fotos clínicas, pontuações e relatórios.
               </p>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <Link
                 href={`/patients/${patient.id}/photos`}
                 className="rounded-full border border-brand-100 px-5 py-3 text-sm font-semibold text-brand-700 transition hover:bg-brand-50"
               >
-                Open photos
+                Abrir fotos
               </Link>
               <Link
                 href={`/patients/${patient.id}/anamnesis/new`}
                 className="rounded-full border border-brand-100 px-5 py-3 text-sm font-semibold text-brand-700 transition hover:bg-brand-50"
               >
-                Start anamnesis
+                Iniciar anamnese
               </Link>
               <Link
                 href={`/patients/${patient.id}/edit`}
                 className="rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-900"
               >
-                Edit patient
+                Editar paciente
               </Link>
             </div>
           </div>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[1.4fr_0.8fr]">
-          <div className="space-y-6">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)]">
+          <div className="min-w-0 space-y-6">
             <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-brand-900">Profile</h2>
+              <h2 className="text-lg font-semibold text-brand-900">Perfil clínico</h2>
               <dl className="mt-6 grid gap-4 md:grid-cols-2">
-                <InfoItem label="Email" value={patient.email} />
-                <InfoItem label="Phone" value={patient.phone || "-"} />
-                <InfoItem label="Birth date" value={formatDate(patient.birthDate)} />
-                <InfoItem label="Gender" value={patient.gender || "-"} />
-                <InfoItem label="Status" value={patient.active ? "Active" : "Inactive"} />
+                <InfoItem label="E-mail" value={patient.email} />
+                <InfoItem label="Telefone" value={patient.phone || "-"} />
                 <InfoItem
-                  label="Consent"
-                  value={patient.consentAccepted ? "Collected" : "Not collected"}
+                  label="Data de nascimento"
+                  value={formatDate(patient.birthDate)}
+                />
+                <InfoItem label="Gênero" value={formatGender(patient.gender)} />
+                <InfoItem
+                  label="Status"
+                  value={patient.active ? "Ativo" : "Inativo"}
+                />
+                <InfoItem
+                  label="Consentimento LGPD"
+                  value={patient.consentAccepted ? "Coletado" : "Pendente"}
                 />
               </dl>
 
               <div className="mt-6 rounded-2xl bg-sand px-4 py-4">
-                <p className="text-sm font-medium text-slate-700">Clinical notes</p>
+                <p className="text-sm font-medium text-slate-700">
+                  Observações clínicas
+                </p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {patient.notes || "No clinical notes registered yet."}
+                  {patient.notes || "Nenhuma observação clínica cadastrada."}
                 </p>
               </div>
             </div>
 
             <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-brand-900">Patient photos</h2>
+                  <h2 className="text-lg font-semibold text-brand-900">
+                    Fotos do paciente
+                  </h2>
                   <p className="mt-2 text-sm text-slate-600">
-                    Clinical image metadata and local file access for before, after,
-                    and progress follow-up.
+                    Registro fotográfico clínico para acompanhamento de antes, depois e
+                    evolução do tratamento.
                   </p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                   <Link
                     href={`/patients/${patient.id}/photos/upload`}
                     className="text-sm font-medium text-brand-700 transition hover:text-brand-900"
                   >
-                    Upload photos
+                    Enviar fotos
                   </Link>
                   <Link
                     href={`/patients/${patient.id}/photos/compare`}
                     className="text-sm font-medium text-brand-700 transition hover:text-brand-900"
                   >
-                    Compare
+                    Comparar
                   </Link>
                 </div>
               </div>
 
               {patientPhotos.length === 0 ? (
                 <div className="mt-4 rounded-3xl border border-dashed border-brand-100 px-4 py-6 text-sm text-slate-500">
-                  No patient photos uploaded yet.
+                  Nenhuma foto clínica enviada para este paciente ainda.
                 </div>
               ) : (
                 <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -155,16 +161,16 @@ export default async function PatientDetailsPage({
                     <Link
                       key={photo.id}
                       href={`/patients/${patient.id}/photos/${photo.id}`}
-                      className="rounded-3xl border border-brand-100 p-4 transition hover:border-brand-300"
+                      className="min-w-0 rounded-3xl border border-brand-100 p-4 transition hover:border-brand-300"
                     >
                       <img
                         src={getPatientPhotoFileUrl(patient.id, photo.id)}
                         alt={photo.originalFileName}
                         className="h-52 w-full rounded-2xl object-cover"
                       />
-                      <div className="mt-4 flex items-start justify-between gap-4">
-                        <div>
-                          <p className="text-sm font-semibold text-brand-900">
+                      <div className="mt-4 flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-brand-900">
                             {photo.originalFileName}
                           </p>
                           <p className="mt-1 text-sm text-slate-500">
@@ -174,7 +180,7 @@ export default async function PatientDetailsPage({
                         <PhotoCategoryBadge category={photo.category} />
                       </div>
                       <p className="mt-3 line-clamp-2 text-sm text-slate-600">
-                        {photo.notes || "No notes registered."}
+                        {photo.notes || "Nenhuma observação registrada."}
                       </p>
                     </Link>
                   ))}
@@ -187,26 +193,28 @@ export default async function PatientDetailsPage({
                     href={`/patients/${patient.id}/photos`}
                     className="text-sm font-medium text-brand-700 transition hover:text-brand-900"
                   >
-                    View full gallery
+                    Ver galeria completa
                   </Link>
                 </div>
               ) : null}
             </div>
 
             <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-brand-900">Anamnesis history</h2>
+              <div className="flex items-center justify-between gap-4">
+                <h2 className="text-lg font-semibold text-brand-900">
+                  Histórico de anamnese
+                </h2>
                 <Link
                   href={`/patients/${patient.id}/anamnesis/new`}
                   className="text-sm font-medium text-brand-700 transition hover:text-brand-900"
                 >
-                  New record
+                  Novo registro
                 </Link>
               </div>
 
               {anamnesisRecords.length === 0 ? (
                 <p className="mt-4 text-sm text-slate-500">
-                  No anamnesis records for this patient yet.
+                  Nenhum registro de anamnese para este paciente ainda.
                 </p>
               ) : (
                 <div className="mt-4 space-y-3">
@@ -220,7 +228,7 @@ export default async function PatientDetailsPage({
                           {record.templateName}
                         </p>
                         <p className="mt-1 text-sm text-slate-500">
-                          Submitted {formatDate(record.createdAt)}
+                          Registrada em {formatDate(record.createdAt)}
                         </p>
                       </div>
 
@@ -228,7 +236,7 @@ export default async function PatientDetailsPage({
                         href={`/patients/${patient.id}/anamnesis/${record.id}`}
                         className="text-sm font-medium text-brand-700 transition hover:text-brand-900"
                       >
-                        View record
+                        Ver registro
                       </Link>
                     </div>
                   ))}
@@ -240,16 +248,19 @@ export default async function PatientDetailsPage({
               <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-brand-900">Score history</h2>
+                    <h2 className="text-lg font-semibold text-brand-900">
+                      Histórico de pontuações
+                    </h2>
                     <p className="mt-2 text-sm text-slate-600">
-                      Native score results calculated from stored anamnesis submissions.
+                      Resultados de pontuação calculados a partir dos registros de
+                      anamnese armazenados.
                     </p>
                   </div>
                 </div>
 
                 {scoreResults.length === 0 ? (
                   <div className="mt-4 rounded-3xl border border-dashed border-brand-100 px-4 py-6 text-sm text-slate-500">
-                    No score results generated for this patient yet.
+                    Nenhum resultado de pontuação gerado para este paciente ainda.
                   </div>
                 ) : (
                   <div className="mt-4 space-y-3">
@@ -260,11 +271,11 @@ export default async function PatientDetailsPage({
                       >
                         <div>
                           <p className="text-sm font-semibold text-brand-900">
-                            {score.anamnesisTemplateName || "Legacy score"}
+                            {score.anamnesisTemplateName || "Pontuação clínica"}
                           </p>
                           <p className="mt-1 text-sm text-slate-500">
-                            {score.totalScore.toFixed(2)} •{" "}
-                            {score.classification || "UNCLASSIFIED"} •{" "}
+                            {formatDecimal(score.totalScore)} •{" "}
+                            {formatScoreClassification(score.classification)} •{" "}
                             {formatDate(score.calculatedAt)}
                           </p>
                         </div>
@@ -273,7 +284,7 @@ export default async function PatientDetailsPage({
                           href={`/patients/${patient.id}/scores/${score.id}`}
                           className="text-sm font-medium text-brand-700 transition hover:text-brand-900"
                         >
-                          View score details
+                          Ver detalhes da pontuação
                         </Link>
                       </div>
                     ))}
@@ -283,25 +294,25 @@ export default async function PatientDetailsPage({
             ) : null}
 
             <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-brand-900">Reports</h2>
+                  <h2 className="text-lg font-semibold text-brand-900">Relatórios</h2>
                   <p className="mt-2 text-sm text-slate-600">
-                    Generate clinical PDFs for follow-up, presentation, and structured
-                    local export.
+                    Gere laudos clínicos em PDF para acompanhamento, apresentação ao
+                    paciente e exportação estruturada.
                   </p>
                 </div>
                 <Link
                   href={`/patients/${patient.id}/reports/new`}
-                  className="rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-900"
+                  className="inline-flex self-start rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-900 sm:self-auto"
                 >
-                  Generate report
+                  Gerar relatório
                 </Link>
               </div>
 
               {reports.length === 0 ? (
                 <div className="mt-4 rounded-3xl border border-dashed border-brand-100 px-4 py-6 text-sm text-slate-500">
-                  No reports generated for this patient yet.
+                  Nenhum relatório gerado para este paciente ainda.
                 </div>
               ) : (
                 <div className="mt-4 space-y-3">
@@ -316,11 +327,11 @@ export default async function PatientDetailsPage({
                             {report.title}
                           </p>
                           <p className="mt-1 text-sm text-slate-500">
-                            {report.reportType.replaceAll("_", " ")} • Generated{" "}
+                            {formatReportType(report.reportType)} • Gerado em{" "}
                             {formatDate(report.generatedAt)}
                           </p>
                           <p className="mt-2 text-sm text-slate-600">
-                            {report.summary || "No clinician summary registered."}
+                            {report.summary || "Nenhum resumo clínico registrado."}
                           </p>
                         </div>
 
@@ -329,7 +340,7 @@ export default async function PatientDetailsPage({
                             href={`/patients/${patient.id}/reports/${report.id}`}
                             className="text-sm font-medium text-brand-700 transition hover:text-brand-900"
                           >
-                            View metadata
+                            Ver detalhes
                           </Link>
                           <a
                             href={getPatientReportFileUrl(patient.id, report.id)}
@@ -337,7 +348,7 @@ export default async function PatientDetailsPage({
                             rel="noreferrer"
                             className="text-sm font-medium text-brand-700 transition hover:text-brand-900"
                           >
-                            Open PDF
+                            Abrir PDF
                           </a>
                           <DeleteReportButton
                             patientId={patient.id}
@@ -353,24 +364,41 @@ export default async function PatientDetailsPage({
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-brand-900">Record metadata</h2>
+              <h2 className="text-lg font-semibold text-brand-900">
+                Metadados do cadastro
+              </h2>
               <dl className="mt-6 space-y-4">
-                <InfoItem label="Created at" value={formatDate(patient.createdAt)} />
-                <InfoItem label="Updated at" value={formatDate(patient.updatedAt)} />
-                <InfoItem label="Patient ID" value={patient.id} />
+                <InfoItem
+                  label="Criado em"
+                  value={formatDateTime(patient.createdAt)}
+                />
+                <InfoItem
+                  label="Atualizado em"
+                  value={formatDateTime(patient.updatedAt)}
+                />
+              <div className="mt-4">
+                <InfoItem
+                  label="ID do paciente"
+                  value={patient.id}
+                  breakAll
+                />
+              </div>
               </dl>
             </div>
 
             <div className="rounded-[2rem] border border-red-100 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-red-800">Danger zone</h2>
+              <h2 className="text-lg font-semibold text-red-800">Zona de exclusão</h2>
               <p className="mt-3 text-sm leading-6 text-slate-600">
-                Deleting a patient currently performs a hard delete. This is intentional
-                for the early baseline until audit and restore flows exist.
+                A exclusão de um paciente remove permanentemente o cadastro do banco de
+                dados. Confirme apenas quando o registro não for mais necessário.
               </p>
               <div className="mt-4">
-                <DeletePatientButton patientId={patient.id} patientName={patientName} />
+                <DeletePatientButton
+                  patientId={patient.id}
+                  patientName={patientName}
+                />
               </div>
             </div>
           </div>
@@ -379,16 +407,16 @@ export default async function PatientDetailsPage({
     );
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Unable to load patient";
+      error instanceof Error ? error.message : "Não foi possível carregar o paciente";
 
     return (
       <section className="space-y-6">
-        <div className="rounded-[2rem] border border-brand-100 bg-white p-8 shadow-sm">
+        <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm sm:p-8">
           <Link href="/patients" className="text-sm font-medium text-brand-700">
-            Back to patients
+            Voltar para pacientes
           </Link>
-          <h1 className="mt-3 text-3xl font-semibold text-brand-900">
-            Patient not available
+          <h1 className="mt-3 text-2xl font-semibold text-brand-900 sm:text-3xl">
+            Paciente indisponível
           </h1>
           <p className="mt-3 text-sm text-red-700">{message}</p>
         </div>
@@ -400,13 +428,20 @@ export default async function PatientDetailsPage({
 type InfoItemProps = {
   label: string;
   value: string;
+  breakAll?: boolean;
 };
 
-function InfoItem({ label, value }: InfoItemProps) {
+function InfoItem({ label, value, breakAll = false }: InfoItemProps) {
   return (
-    <div>
+    <div className="min-w-0">
       <dt className="text-sm font-medium text-slate-500">{label}</dt>
-      <dd className="mt-1 text-sm text-slate-800">{value}</dd>
+      <dd
+        className={`mt-1 text-sm text-slate-800 ${
+          breakAll ? "break-all" : "break-words"
+        }`}
+      >
+        {value}
+      </dd>
     </div>
   );
 }

@@ -19,8 +19,11 @@ export default async function PatientPhotoUploadPage({
 
     return (
       <section className="space-y-6">
-        <Link href={`/patients/${patient.id}/photos`} className="text-sm font-medium text-brand-700">
-          Back to gallery
+        <Link
+          href={`/patients/${patient.id}/photos`}
+          className="text-sm font-medium text-brand-700"
+        >
+          Voltar para a galeria
         </Link>
         <PatientPhotoUploadForm
           patientId={patient.id}
@@ -31,15 +34,20 @@ export default async function PatientPhotoUploadPage({
     );
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Unable to load patient photo upload form.";
+      error instanceof Error
+        ? error.message
+        : "Não foi possível carregar o envio de fotos.";
 
     return (
-      <section className="rounded-[2rem] border border-brand-100 bg-white p-8 shadow-sm">
-        <Link href={`/patients/${params.id}/photos`} className="text-sm font-medium text-brand-700">
-          Back to gallery
+      <section className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm sm:p-8">
+        <Link
+          href={`/patients/${params.id}/photos`}
+          className="text-sm font-medium text-brand-700"
+        >
+          Voltar para a galeria
         </Link>
-        <h1 className="mt-3 text-3xl font-semibold text-brand-900">
-          Photo upload unavailable
+        <h1 className="mt-3 text-2xl font-semibold text-brand-900 sm:text-3xl">
+          Envio de fotos indisponível
         </h1>
         <p className="mt-3 text-sm text-red-700">{message}</p>
       </section>

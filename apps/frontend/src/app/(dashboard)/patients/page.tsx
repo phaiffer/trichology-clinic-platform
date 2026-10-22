@@ -31,26 +31,26 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
 
     return (
       <section className="space-y-6">
-        <div className="flex flex-col gap-4 rounded-[2rem] border border-brand-100 bg-white p-8 shadow-sm">
+        <div className="flex flex-col gap-4 rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm sm:p-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-brand-500">
-                Patients
+                Pacientes
               </p>
-              <h1 className="mt-2 text-3xl font-semibold text-brand-900">
-                Patient registration and management
+              <h1 className="mt-2 text-2xl font-semibold text-brand-900 sm:text-3xl">
+                Cadastro e gestão de pacientes
               </h1>
               <p className="mt-3 max-w-2xl text-slate-600">
-                Search by patient name, paginate through records, and open each patient
-                for review, editing, or deletion.
+                Pesquise pelo nome do paciente, navegue pelos prontuários e abra cada
+                ficha para consulta, avaliação tricológica ou edição.
               </p>
             </div>
 
             <Link
               href="/patients/new"
-              className="inline-flex rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-900"
+              className="inline-flex self-start rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-900 md:self-auto"
             >
-              New patient
+              Novo paciente
             </Link>
           </div>
 
@@ -58,40 +58,57 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
         </div>
 
         <div className="overflow-hidden rounded-[2rem] border border-brand-100 bg-white shadow-sm">
-          <div className="grid grid-cols-[1.3fr_1.1fr_1.4fr_0.8fr_0.9fr] gap-4 border-b border-brand-100 px-6 py-4 text-sm font-semibold text-slate-500">
-            <span>Name</span>
-            <span>Phone</span>
-            <span>Email</span>
+          <div className="hidden grid-cols-[1.3fr_1.1fr_1.4fr_0.8fr_0.7fr] gap-4 border-b border-brand-100 px-6 py-4 text-sm font-semibold text-slate-500 md:grid">
+            <span>Nome</span>
+            <span>Telefone</span>
+            <span>E-mail</span>
             <span>Status</span>
-            <span>Actions</span>
+            <span>Ações</span>
           </div>
 
           {patientPage.content.length === 0 ? (
             <div className="px-6 py-10 text-sm text-slate-500">
               {search
-                ? `No patients found for "${search}".`
-                : "No patients yet. Create the first patient to start the flow."}
+                ? `Nenhum paciente encontrado para "${search}".`
+                : "Nenhum paciente cadastrado ainda. Crie o primeiro paciente para iniciar o atendimento."}
             </div>
           ) : (
             patientPage.content.map((patient) => (
               <div
                 key={patient.id}
-                className="grid grid-cols-[1.3fr_1.1fr_1.4fr_0.8fr_0.9fr] gap-4 border-b border-brand-50 px-6 py-4 text-sm text-slate-700 last:border-b-0"
+                className="flex flex-col gap-2 border-b border-brand-50 px-5 py-4 text-sm text-slate-700 last:border-b-0 md:grid md:grid-cols-[1.3fr_1.1fr_1.4fr_0.8fr_0.7fr] md:items-center md:gap-4 md:px-6"
               >
-                <span className="font-medium text-brand-900">
-                  {patient.firstName} {patient.lastName}
+                <div className="flex items-center justify-between gap-2 md:block">
+                  <span className="font-medium text-brand-900">
+                    {patient.firstName} {patient.lastName}
+                  </span>
+                  <span
+                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold md:hidden ${
+                      patient.active
+                        ? "bg-brand-50 text-brand-700"
+                        : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    {patient.active ? "Ativo" : "Inativo"}
+                  </span>
+                </div>
+                <span className="text-slate-600 md:text-slate-700">
+                  {patient.phone || "-"}
                 </span>
-                <span>{patient.phone || "-"}</span>
-                <span>{patient.email}</span>
-                <span>{patient.active ? "Active" : "Inactive"}</span>
-                <span>
+                <span className="break-all text-slate-600 md:text-slate-700">
+                  {patient.email}
+                </span>
+                <span className="hidden md:inline">
+                  {patient.active ? "Ativo" : "Inativo"}
+                </span>
+                <div className="pt-1 md:pt-0">
                   <Link
                     href={`/patients/${patient.id}`}
                     className="font-medium text-brand-700 transition hover:text-brand-900"
                   >
-                    Open
+                    Abrir prontuário
                   </Link>
-                </span>
+                </div>
               </div>
             ))
           )}
@@ -109,16 +126,16 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
     );
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Unable to load patients";
+      error instanceof Error ? error.message : "Não foi possível carregar os pacientes";
 
     return (
       <section className="space-y-6">
-        <div className="rounded-[2rem] border border-brand-100 bg-white p-8 shadow-sm">
+        <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm sm:p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-brand-500">
-            Patients
+            Pacientes
           </p>
-          <h1 className="mt-2 text-3xl font-semibold text-brand-900">
-            Patient registration and management
+          <h1 className="mt-2 text-2xl font-semibold text-brand-900 sm:text-3xl">
+            Cadastro e gestão de pacientes
           </h1>
           <p className="mt-3 text-sm text-red-700">{message}</p>
         </div>

@@ -29,7 +29,7 @@ export function CreateScoreButton({
       setError(
         submissionError instanceof Error
           ? submissionError.message
-          : "Unable to calculate score",
+          : "Não foi possível calcular a pontuação",
       );
     } finally {
       setIsSubmitting(false);
@@ -44,7 +44,7 @@ export function CreateScoreButton({
         disabled={isSubmitting}
         className="rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-900 disabled:cursor-not-allowed disabled:opacity-70"
       >
-        {isSubmitting ? "Calculating score..." : "Calculate score"}
+        {isSubmitting ? "Calculando pontuação..." : "Calcular pontuação"}
       </button>
 
       {error ? (

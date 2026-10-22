@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Trichology Clinic",
-  description: "Clinical management platform for trichology workflows",
+  title: "Clínica de Tricologia • PhaifferTech",
+  description: "Plataforma de gestão clínica para fluxos de tricologia",
 };
 
 export default function RootLayout({
@@ -12,8 +12,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="pt-BR">
+      <body className="overflow-x-hidden">{children}</body>
     </html>
   );
 }

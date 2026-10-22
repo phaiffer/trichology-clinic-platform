@@ -24,7 +24,7 @@ export function LoginForm() {
       setError(
         submissionError instanceof Error
           ? submissionError.message
-          : "Unable to sign in",
+          : "Não foi possível entrar no sistema",
       );
     } finally {
       setIsSubmitting(false);
@@ -34,23 +34,23 @@ export function LoginForm() {
   return (
     <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-slate-700">Email</span>
+        <span className="text-sm font-medium text-slate-700">E-mail</span>
         <input
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          placeholder="doctor@clinic.com"
+          placeholder="admin@exemplo.test"
           required
           className="w-full rounded-2xl border border-brand-100 px-4 py-3 outline-none transition focus:border-brand-500"
         />
       </label>
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-slate-700">Password</span>
+        <span className="text-sm font-medium text-slate-700">Senha</span>
         <input
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          placeholder="Enter your password"
+          placeholder="Digite sua senha"
           required
           className="w-full rounded-2xl border border-brand-100 px-4 py-3 outline-none transition focus:border-brand-500"
         />
@@ -67,7 +67,7 @@ export function LoginForm() {
         disabled={isSubmitting}
         className="inline-flex rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-900 disabled:cursor-not-allowed disabled:opacity-70"
       >
-        {isSubmitting ? "Signing in..." : "Sign in"}
+        {isSubmitting ? "Entrando..." : "Entrar"}
       </button>
     </form>
   );

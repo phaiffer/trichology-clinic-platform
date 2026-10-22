@@ -22,7 +22,7 @@ export function DeleteReportButton({
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      `Delete report "${reportTitle}"? This also removes the generated PDF from local storage.`,
+      `Excluir o relatório "${reportTitle}"? Esta ação também remove o PDF gerado do armazenamento local.`,
     );
 
     if (!confirmed) {
@@ -39,7 +39,9 @@ export function DeleteReportButton({
       router.refresh();
     } catch (error) {
       window.alert(
-        error instanceof Error ? error.message : "Unable to delete report.",
+        error instanceof Error
+          ? error.message
+          : "Não foi possível excluir o relatório.",
       );
     } finally {
       setIsDeleting(false);
@@ -53,7 +55,7 @@ export function DeleteReportButton({
       disabled={isDeleting}
       className="rounded-full border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
     >
-      {isDeleting ? "Deleting..." : "Delete report"}
+      {isDeleting ? "Excluindo..." : "Excluir relatório"}
     </button>
   );
 }

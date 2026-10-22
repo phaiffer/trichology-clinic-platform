@@ -7,7 +7,7 @@ public class LocalAdminBootstrapProperties {
 
     private String bootstrapAdminEmail;
     private String bootstrapAdminPassword;
-    private String bootstrapAdminFullName = "Local Administrator";
+    private String bootstrapAdminFullName = "Profissional de demonstração";
 
     public String getBootstrapAdminEmail() {
         return bootstrapAdminEmail;

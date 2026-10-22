@@ -22,7 +22,7 @@ export function DeletePhotoButton({
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      `Delete photo "${originalFileName}"? This also removes the file from local storage.`,
+      `Excluir a foto "${originalFileName}"? Esta ação também remove o arquivo do armazenamento local.`,
     );
 
     if (!confirmed) {
@@ -39,7 +39,9 @@ export function DeletePhotoButton({
       router.refresh();
     } catch (error) {
       window.alert(
-        error instanceof Error ? error.message : "Unable to delete patient photo.",
+        error instanceof Error
+          ? error.message
+          : "Não foi possível excluir a foto do paciente.",
       );
     } finally {
       setIsDeleting(false);
@@ -53,7 +55,7 @@ export function DeletePhotoButton({
       disabled={isDeleting}
       className="rounded-full border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
     >
-      {isDeleting ? "Deleting..." : "Delete photo"}
+      {isDeleting ? "Excluindo..." : "Excluir foto"}
     </button>
   );
 }

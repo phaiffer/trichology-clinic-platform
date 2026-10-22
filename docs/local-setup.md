@@ -131,9 +131,9 @@ Roles are seeded by Flyway:
 
 To create the first local admin, set these variables before starting the backend:
 
-- `APP_SECURITY_BOOTSTRAP_ADMIN_EMAIL=admin@example.com`
+- `APP_SECURITY_BOOTSTRAP_ADMIN_EMAIL=admin@exemplo.test`
 - `APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD=change-this-local-password`
-- `APP_SECURITY_BOOTSTRAP_ADMIN_FULL_NAME=Local Administrator`
+- `APP_SECURITY_BOOTSTRAP_ADMIN_FULL_NAME="Profissional de demonstração"`
 
 The bootstrap runner hashes the password with BCrypt and creates or updates only that configured local admin account. If email or password is missing, no user is created. Do not commit real credentials to the repository.
 
@@ -280,6 +280,28 @@ Classification thresholds:
    `mvn spring-boot:run`
 5. Flyway will create the schema and seed auth roles on a clean database before Spring Data repositories initialize.
 6. Log in from `http://localhost:3000/login` using the local bootstrap admin credentials you provided.
+
+## Demo Seed (Carga Fictícia Reproduzível)
+
+O script `scripts/demo-seed/seed-demo-data.mjs` aplica uma carga fictícia e idempotente via API HTTP após o login do administrador de demonstração (`Profissional de demonstração`):
+
+- 5 pacientes fictícios (nomes com sufixo `(Exemplo)`, telefones `(11) 90000-0001` a `(11) 90000-0005` e e-mails `@exemplo.test`)
+- 1 modelo de anamnese `"Avaliação capilar inicial"` com perguntas de escolha única com peso, booleana com peso, número com peso e texto livre
+- 1 registro de anamnese para a paciente principal
+- 1 resultado de pontuação calculado (`12,00` → `MODERATE`)
+- 2 imagens geométricas sintéticas (sem fotos de pessoas reais)
+- 1 relatório clínico em PDF de 2 páginas em português
+
+Para executar o seed contra o backend local (certifique-se de que o backend foi iniciado com `APP_SECURITY_BOOTSTRAP_ADMIN_EMAIL`, `APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD` e `APP_SECURITY_BOOTSTRAP_ADMIN_FULL_NAME="Profissional de demonstração"`):
+
+```bash
+export DEMO_ADMIN_EMAIL="admin@exemplo.test"
+export DEMO_ADMIN_PASSWORD="<mesma-senha-definida-no-bootstrap-do-backend>"
+export API_BASE_URL="http://localhost:8080/api" # ou http://localhost:18080/api
+node scripts/demo-seed/seed-demo-data.mjs
+```
+
+A senha do administrador nunca fica gravada no código-fonte: o script exige que `DEMO_ADMIN_PASSWORD` seja informada na sessão via variável de ambiente.
 
 ## Migration Rules
 

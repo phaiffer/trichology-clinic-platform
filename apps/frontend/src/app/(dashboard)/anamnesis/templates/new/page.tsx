@@ -7,16 +7,16 @@ export default async function NewAnamnesisTemplatePage() {
 
   return (
     <section className="space-y-6">
-      <div className="rounded-[2rem] border border-brand-100 bg-white p-8 shadow-sm">
+      <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm sm:p-8">
         <Link href="/anamnesis" className="text-sm font-medium text-brand-700">
-          Back to templates
+          Voltar para modelos
         </Link>
-        <h1 className="mt-3 text-3xl font-semibold text-brand-900">
-          Create anamnesis template
+        <h1 className="mt-3 text-2xl font-semibold text-brand-900 sm:text-3xl">
+          Criar modelo de anamnese
         </h1>
         <p className="mt-3 max-w-2xl text-slate-600">
-          Define the reusable structure of a clinical intake form without hardcoding
-          it into the patient flow.
+          Defina a estrutura de perguntas, obrigatoriedade, opções e pesos de pontuação
+          para uso nos atendimentos clínicos.
         </p>
       </div>
 

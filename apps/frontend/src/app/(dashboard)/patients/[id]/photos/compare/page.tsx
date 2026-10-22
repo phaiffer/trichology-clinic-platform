@@ -19,8 +19,11 @@ export default async function PatientPhotoComparePage({
 
     return (
       <section className="space-y-6">
-        <Link href={`/patients/${patient.id}/photos`} className="text-sm font-medium text-brand-700">
-          Back to gallery
+        <Link
+          href={`/patients/${patient.id}/photos`}
+          className="text-sm font-medium text-brand-700"
+        >
+          Voltar para a galeria
         </Link>
         <BeforeAfterComparison
           patientId={patient.id}
@@ -31,15 +34,20 @@ export default async function PatientPhotoComparePage({
     );
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Unable to load comparison view.";
+      error instanceof Error
+        ? error.message
+        : "Não foi possível carregar a tela de comparação.";
 
     return (
-      <section className="rounded-[2rem] border border-brand-100 bg-white p-8 shadow-sm">
-        <Link href={`/patients/${params.id}/photos`} className="text-sm font-medium text-brand-700">
-          Back to gallery
+      <section className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm sm:p-8">
+        <Link
+          href={`/patients/${params.id}/photos`}
+          className="text-sm font-medium text-brand-700"
+        >
+          Voltar para a galeria
         </Link>
-        <h1 className="mt-3 text-3xl font-semibold text-brand-900">
-          Comparison unavailable
+        <h1 className="mt-3 text-2xl font-semibold text-brand-900 sm:text-3xl">
+          Comparação indisponível
         </h1>
         <p className="mt-3 text-sm text-red-700">{message}</p>
       </section>

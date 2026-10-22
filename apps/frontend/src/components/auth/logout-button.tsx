@@ -27,7 +27,7 @@ export function LogoutButton() {
       disabled={isSubmitting}
       className="rounded-full border border-brand-100 px-4 py-2 text-sm font-semibold text-brand-700 transition hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-70"
     >
-      {isSubmitting ? "Signing out..." : "Logout"}
+      {isSubmitting ? "Saindo..." : "Sair"}
     </button>
   );
 }

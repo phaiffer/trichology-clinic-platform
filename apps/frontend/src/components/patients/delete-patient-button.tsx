@@ -19,7 +19,7 @@ export function DeletePatientButton({
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      `Delete patient "${patientName}" permanently? This action cannot be undone.`,
+      `Excluir o paciente "${patientName}" permanentemente? Esta ação não pode ser desfeita.`,
     );
 
     if (!confirmed) {
@@ -37,7 +37,7 @@ export function DeletePatientButton({
       setError(
         deletionError instanceof Error
           ? deletionError.message
-          : "Unable to delete patient",
+          : "Não foi possível excluir o paciente",
       );
       setIsDeleting(false);
     }
@@ -51,11 +51,10 @@ export function DeletePatientButton({
         disabled={isDeleting}
         className="rounded-full border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
       >
-        {isDeleting ? "Deleting..." : "Delete patient"}
+        {isDeleting ? "Excluindo..." : "Excluir paciente"}
       </button>
 
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
     </div>
   );
 }
-

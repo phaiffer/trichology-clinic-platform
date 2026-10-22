@@ -28,7 +28,7 @@ export function TemplateStatusToggle({
       setError(
         toggleError instanceof Error
           ? toggleError.message
-          : "Unable to update template status",
+          : "Não foi possível atualizar o status do modelo",
       );
     } finally {
       setIsSubmitting(false);
@@ -44,10 +44,10 @@ export function TemplateStatusToggle({
         className="rounded-full border border-brand-100 px-4 py-2 text-sm font-semibold text-brand-700 transition hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-70"
       >
         {isSubmitting
-          ? "Updating status..."
+          ? "Atualizando status..."
           : active
-            ? "Set inactive"
-            : "Set active"}
+            ? "Desativar modelo"
+            : "Ativar modelo"}
       </button>
 
       {error ? <p className="text-sm text-red-700">{error}</p> : null}

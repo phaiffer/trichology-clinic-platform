@@ -4,16 +4,16 @@ import { PatientForm } from "@/components/patients/patient-form";
 export default function NewPatientPage() {
   return (
     <section className="space-y-6">
-      <div className="rounded-[2rem] border border-brand-100 bg-white p-8 shadow-sm">
+      <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm sm:p-8">
         <Link href="/patients" className="text-sm font-medium text-brand-700">
-          Back to patients
+          Voltar para pacientes
         </Link>
-        <h1 className="mt-3 text-3xl font-semibold text-brand-900">
-          Create patient
+        <h1 className="mt-3 text-2xl font-semibold text-brand-900 sm:text-3xl">
+          Cadastrar paciente
         </h1>
         <p className="mt-3 max-w-2xl text-slate-600">
-          The first patient form already validates essential identity and consent data
-          before sending it to the backend.
+          Preencha os dados de identificação, contato e consentimento LGPD para iniciar
+          o prontuário tricológico.
         </p>
       </div>
 

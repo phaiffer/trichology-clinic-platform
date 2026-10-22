@@ -17,6 +17,7 @@ import {
   ScoreResult,
 } from "@/lib/types";
 import { ApiRequestError } from "@/lib/api-error";
+import { translateApiErrorMessage } from "@/lib/formatters";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api";
@@ -35,7 +36,7 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    const fallbackMessage = "Request failed";
+    const fallbackMessage = "Falha na comunicação com o servidor";
     let errorMessage = fallbackMessage;
 
     try {
@@ -43,7 +44,10 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
       const details = Array.isArray(error.details)
         ? ` (${error.details.join(", ")})`
         : "";
-      errorMessage = `${error.message ?? fallbackMessage}${details}`;
+      const translatedMessage = error.message
+        ? translateApiErrorMessage(String(error.message))
+        : fallbackMessage;
+      errorMessage = `${translatedMessage}${details}`;
     } catch {
       errorMessage = fallbackMessage;
     }
@@ -67,7 +71,7 @@ async function apiMultipartRequest<T>(path: string, formData: FormData): Promise
   });
 
   if (!response.ok) {
-    const fallbackMessage = "Request failed";
+    const fallbackMessage = "Falha na comunicação com o servidor";
     let errorMessage = fallbackMessage;
 
     try {
@@ -75,7 +79,10 @@ async function apiMultipartRequest<T>(path: string, formData: FormData): Promise
       const details = Array.isArray(error.details)
         ? ` (${error.details.join(", ")})`
         : "";
-      errorMessage = `${error.message ?? fallbackMessage}${details}`;
+      const translatedMessage = error.message
+        ? translateApiErrorMessage(String(error.message))
+        : fallbackMessage;
+      errorMessage = `${translatedMessage}${details}`;
     } catch {
       errorMessage = fallbackMessage;
     }

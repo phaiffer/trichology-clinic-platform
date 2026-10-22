@@ -32,7 +32,7 @@ export function PaginationControls({
   return (
     <div className="flex flex-col gap-3 border-t border-brand-100 px-6 py-4 text-sm text-slate-600 md:flex-row md:items-center md:justify-between">
       <p>
-        Page {totalPages === 0 ? 0 : page + 1} of {totalPages}
+        Página {totalPages === 0 ? 0 : page + 1} de {totalPages}
       </p>
 
       <div className="flex items-center gap-3">
@@ -41,11 +41,11 @@ export function PaginationControls({
             href={createHref(page - 1, size, search)}
             className="rounded-full border border-brand-100 px-4 py-2 font-medium text-brand-700 transition hover:bg-brand-50"
           >
-            Previous
+            Anterior
           </Link>
         ) : (
           <span className="cursor-not-allowed rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-300">
-            Previous
+            Anterior
           </span>
         )}
 
@@ -54,11 +54,11 @@ export function PaginationControls({
             href={createHref(page + 1, size, search)}
             className="rounded-full border border-brand-100 px-4 py-2 font-medium text-brand-700 transition hover:bg-brand-50"
           >
-            Next
+            Próxima
           </Link>
         ) : (
           <span className="cursor-not-allowed rounded-full border border-slate-200 px-4 py-2 font-medium text-slate-300">
-            Next
+            Próxima
           </span>
         )}
       </div>

@@ -5,6 +5,12 @@ import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPatientReport, getPatientPhotoFileUrl } from "@/lib/api";
 import {
+  formatDate,
+  formatDecimal,
+  formatPhotoCategory,
+  formatScoreClassification,
+} from "@/lib/formatters";
+import {
   PatientAnamnesisRecordListItem,
   PatientPhoto,
   PatientReportInput,
@@ -29,18 +35,6 @@ const initialState: PatientReportInput = {
   reportType: "CLINICAL_EVALUATION",
 };
 
-function formatDate(value: string | null) {
-  if (!value) {
-    return "-";
-  }
-
-  const normalizedValue = /^\d{4}-\d{2}-\d{2}$/.test(value)
-    ? `${value}T12:00:00`
-    : value;
-
-  return new Intl.DateTimeFormat("en-US").format(new Date(normalizedValue));
-}
-
 export function PatientReportForm({
   patientId,
   patientName,
@@ -52,7 +46,7 @@ export function PatientReportForm({
   const router = useRouter();
   const [form, setForm] = useState<PatientReportInput>({
     ...initialState,
-    title: `${patientName} Clinical Evaluation`,
+    title: `Avaliação Clínica Capilar — ${patientName}`,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -92,7 +86,7 @@ export function PatientReportForm({
       setError(
         submissionError instanceof Error
           ? submissionError.message
-          : "Unable to generate report",
+          : "Não foi possível gerar o relatório",
       );
     } finally {
       setIsSubmitting(false);
@@ -105,19 +99,22 @@ export function PatientReportForm({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-brand-500">
-              Clinical report
+              Relatório clínico
             </p>
             <h2 className="mt-2 text-2xl font-semibold text-brand-900">
               {patientName}
             </h2>
             <p className="mt-3 max-w-3xl text-slate-600">
-              Assemble the first clinical PDF using the existing anamnesis, scoring,
-              and photo records already stored for this patient.
+              Consolide o laudo clínico em PDF utilizando os registros de anamnese,
+              pontuação e fotos já armazenados para este paciente.
             </p>
           </div>
 
           <div className="rounded-2xl bg-brand-50 px-4 py-3 text-sm text-slate-700">
-            {selectedPhotosCount} photo{selectedPhotosCount === 1 ? "" : "s"} selected
+            {selectedPhotosCount}{" "}
+            {selectedPhotosCount === 1
+              ? "foto selecionada"
+              : "fotos selecionadas"}
           </div>
         </div>
       </section>
@@ -125,7 +122,9 @@ export function PatientReportForm({
       <section className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
         <div className="grid gap-4 lg:grid-cols-2">
           <label className="block space-y-2">
-            <span className="text-sm font-medium text-slate-700">Report title</span>
+            <span className="text-sm font-medium text-slate-700">
+              Título do relatório
+            </span>
             <input
               type="text"
               value={form.title}
@@ -136,10 +135,12 @@ export function PatientReportForm({
           </label>
 
           <label className="block space-y-2">
-            <span className="text-sm font-medium text-slate-700">Report type</span>
+            <span className="text-sm font-medium text-slate-700">
+              Tipo de relatório
+            </span>
             <input
               type="text"
-              value="Clinical evaluation"
+              value="Avaliação clínica"
               disabled
               className="w-full rounded-2xl border border-brand-100 bg-slate-50 px-4 py-3 text-slate-500"
             />
@@ -148,13 +149,15 @@ export function PatientReportForm({
 
         <label className="mt-4 block space-y-2">
           <span className="text-sm font-medium text-slate-700">
-            Clinical summary / observations
+            Resumo clínico / observações
           </span>
           <textarea
             value={form.summary ?? ""}
-            onChange={(event) => updateField("summary", event.target.value || null)}
+            onChange={(event) =>
+              updateField("summary", event.target.value || null)
+            }
             className="min-h-32 w-full rounded-2xl border border-brand-100 px-4 py-3 outline-none transition focus:border-brand-500"
-            placeholder="Optional clinician summary to include in the PDF."
+            placeholder="Resumo clínico opcional para incluir no PDF."
           />
         </label>
       </section>
@@ -163,7 +166,7 @@ export function PatientReportForm({
         <div className="grid gap-4 lg:grid-cols-2">
           <label className="block space-y-2">
             <span className="text-sm font-medium text-slate-700">
-              Anamnesis record
+              Registro de anamnese
             </span>
             <select
               value={form.anamnesisRecordId ?? ""}
@@ -172,7 +175,7 @@ export function PatientReportForm({
               }
               className="w-full rounded-2xl border border-brand-100 px-4 py-3 outline-none transition focus:border-brand-500"
             >
-              <option value="">No specific anamnesis record</option>
+              <option value="">Sem registro de anamnese específico</option>
               {anamnesisRecords.map((record) => (
                 <option key={record.id} value={record.id}>
                   {record.templateName} • {formatDate(record.createdAt)}
@@ -183,7 +186,9 @@ export function PatientReportForm({
 
           {canUseScoring ? (
             <label className="block space-y-2">
-              <span className="text-sm font-medium text-slate-700">Score result</span>
+              <span className="text-sm font-medium text-slate-700">
+                Resultado da pontuação
+              </span>
               <select
                 value={form.scoreResultId ?? ""}
                 onChange={(event) =>
@@ -191,47 +196,58 @@ export function PatientReportForm({
                 }
                 className="w-full rounded-2xl border border-brand-100 px-4 py-3 outline-none transition focus:border-brand-500"
               >
-                <option value="">No score result selected</option>
+                <option value="">Nenhum resultado de pontuação selecionado</option>
                 {scoreResults.map((score) => (
                   <option key={score.id} value={score.id}>
-                    {score.anamnesisTemplateName || "Legacy score"} •{" "}
-                    {score.totalScore.toFixed(2)}
-                    {score.classification ? ` • ${score.classification}` : ""}
+                    {score.anamnesisTemplateName || "Pontuação clínica"} •{" "}
+                    {formatDecimal(score.totalScore)}
+                    {score.classification
+                      ? ` • ${formatScoreClassification(score.classification)}`
+                      : ""}
                   </option>
                 ))}
               </select>
             </label>
           ) : (
             <div className="rounded-2xl border border-brand-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-              Score selection is available only for clinician and admin accounts.
+              A seleção de pontuação está disponível apenas para tricologistas e
+              administradores.
             </div>
           )}
         </div>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <InfoBlock
-            title="Available anamnesis records"
+            title="Registros de anamnese disponíveis"
             value={String(anamnesisRecords.length)}
           />
-          <InfoBlock title="Available score results" value={String(scoreResults.length)} />
+          <InfoBlock
+            title="Resultados de pontuação disponíveis"
+            value={String(scoreResults.length)}
+          />
         </div>
       </section>
 
       <section className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-brand-900">Selected patient photos</h3>
+            <h3 className="text-lg font-semibold text-brand-900">
+              Fotos do paciente selecionadas
+            </h3>
             <p className="mt-2 text-sm text-slate-600">
-              Pick the photos that should appear inside the generated PDF.
+              Escolha as imagens que devem aparecer no relatório em PDF.
             </p>
           </div>
-          <p className="text-sm text-slate-500">{photos.length} available</p>
+          <p className="text-sm text-slate-500">
+            {photos.length}{" "}
+            {photos.length === 1 ? "disponível" : "disponíveis"}
+          </p>
         </div>
 
         {photos.length === 0 ? (
           <div className="mt-4 rounded-3xl border border-dashed border-brand-100 px-4 py-6 text-sm text-slate-500">
-            No patient photos are available yet. You can still generate a report without
-            photos.
+            Nenhuma foto do paciente disponível ainda. Você ainda pode gerar o
+            relatório sem fotos.
           </div>
         ) : (
           <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -249,7 +265,7 @@ export function PatientReportForm({
                 >
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-sm font-semibold text-brand-900">
-                      {photo.category}
+                      {formatPhotoCategory(photo.category)}
                     </span>
                     <input
                       type="checkbox"
@@ -272,7 +288,7 @@ export function PatientReportForm({
                     {formatDate(photo.captureDate)}
                   </p>
                   <p className="mt-2 line-clamp-2 text-sm text-slate-600">
-                    {photo.notes || "No notes registered."}
+                    {photo.notes || "Nenhuma observação registrada."}
                   </p>
                 </label>
               );
@@ -287,20 +303,20 @@ export function PatientReportForm({
         </div>
       ) : null}
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button
           type="submit"
           disabled={isSubmitting}
           className="rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-900 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {isSubmitting ? "Generating PDF..." : "Generate report"}
+          {isSubmitting ? "Gerando PDF..." : "Gerar relatório"}
         </button>
         <button
           type="button"
           onClick={() => router.back()}
           className="rounded-full border border-brand-100 px-5 py-3 text-sm font-semibold text-brand-700 transition hover:bg-brand-50"
         >
-          Cancel
+          Cancelar
         </button>
       </div>
     </form>

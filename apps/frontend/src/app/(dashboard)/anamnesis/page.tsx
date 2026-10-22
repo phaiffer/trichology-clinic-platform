@@ -1,10 +1,7 @@
 import Link from "next/link";
 import { canManageTemplates, requireAuthenticatedUser } from "@/lib/auth";
+import { formatDate } from "@/lib/formatters";
 import { getServerAnamnesisTemplates } from "@/lib/server-api";
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en-US").format(new Date(value));
-}
 
 export default async function AnamnesisTemplatesPage() {
   try {
@@ -14,34 +11,34 @@ export default async function AnamnesisTemplatesPage() {
 
     return (
       <section className="space-y-6">
-        <div className="flex flex-col gap-4 rounded-[2rem] border border-brand-100 bg-white p-8 shadow-sm md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-4 rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm sm:p-8 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-brand-500">
-              Anamnesis
+              Anamnese
             </p>
-            <h1 className="mt-2 text-3xl font-semibold text-brand-900">
-              Dynamic intake templates
+            <h1 className="mt-2 text-2xl font-semibold text-brand-900 sm:text-3xl">
+              Modelos dinâmicos de anamnese
             </h1>
             <p className="mt-3 max-w-2xl text-slate-600">
-              Manage reusable anamnesis templates that can later power patient intake,
-              scoring, and structured clinical workflows.
+              Gerencie os questionários clínicos reutilizáveis que estruturam a coleta
+              de respostas dos pacientes e o cálculo de pontuação capilar.
             </p>
           </div>
 
           {canCreateTemplates ? (
             <Link
               href="/anamnesis/templates/new"
-              className="inline-flex rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-900"
+              className="inline-flex self-start rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-900 md:self-auto"
             >
-              New template
+              Novo modelo
             </Link>
           ) : null}
         </div>
 
         {templates.length === 0 ? (
-          <section className="rounded-[2rem] border border-brand-100 bg-white p-8 shadow-sm text-sm text-slate-500">
-            No anamnesis templates yet. Create the first template to enable patient
-            intake.
+          <section className="rounded-[2rem] border border-brand-100 bg-white p-8 text-sm text-slate-500 shadow-sm">
+            Nenhum modelo de anamnese cadastrado ainda. Crie o primeiro modelo para
+            iniciar as avaliações clínicas.
           </section>
         ) : (
           <div className="grid gap-4 xl:grid-cols-2">
@@ -56,7 +53,7 @@ export default async function AnamnesisTemplatesPage() {
                       {template.name}
                     </h2>
                     <p className="mt-2 text-sm text-slate-600">
-                      {template.description || "No template description provided."}
+                      {template.description || "Sem descrição informada para este modelo."}
                     </p>
                   </div>
                   <span
@@ -66,13 +63,16 @@ export default async function AnamnesisTemplatesPage() {
                         : "bg-slate-100 text-slate-500"
                     }`}
                   >
-                    {template.active ? "Active" : "Inactive"}
+                    {template.active ? "Ativo" : "Inativo"}
                   </span>
                 </div>
 
                 <div className="mt-6 flex items-center justify-between text-sm text-slate-500">
-                  <span>{template.questions.length} questions</span>
-                  <span>Created {formatDate(template.createdAt)}</span>
+                  <span>
+                    {template.questions.length}{" "}
+                    {template.questions.length === 1 ? "pergunta" : "perguntas"}
+                  </span>
+                  <span>Criado em {formatDate(template.createdAt)}</span>
                 </div>
 
                 <div className="mt-6">
@@ -80,7 +80,7 @@ export default async function AnamnesisTemplatesPage() {
                     href={`/anamnesis/templates/${template.id}`}
                     className="font-medium text-brand-700 transition hover:text-brand-900"
                   >
-                    Open template
+                    Abrir modelo
                   </Link>
                 </div>
               </article>
@@ -91,11 +91,13 @@ export default async function AnamnesisTemplatesPage() {
     );
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Unable to load anamnesis templates";
+      error instanceof Error
+        ? error.message
+        : "Não foi possível carregar os modelos de anamnese";
 
     return (
-      <section className="rounded-[2rem] border border-brand-100 bg-white p-8 shadow-sm">
-        <h1 className="text-3xl font-semibold text-brand-900">Anamnesis</h1>
+      <section className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm sm:p-8">
+        <h1 className="text-2xl font-semibold text-brand-900 sm:text-3xl">Anamnese</h1>
         <p className="mt-3 text-sm text-red-700">{message}</p>
       </section>
     );

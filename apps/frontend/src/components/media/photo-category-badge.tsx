@@ -1,3 +1,4 @@
+import { formatPhotoCategory } from "@/lib/formatters";
 import { PhotoCategory } from "@/lib/types";
 
 const categoryStyles: Record<PhotoCategory, string> = {
@@ -9,9 +10,9 @@ const categoryStyles: Record<PhotoCategory, string> = {
 export function PhotoCategoryBadge({ category }: { category: PhotoCategory }) {
   return (
     <span
-      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${categoryStyles[category]}`}
+      className={`inline-flex shrink-0 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${categoryStyles[category]}`}
     >
-      {category}
+      {formatPhotoCategory(category)}
     </span>
   );
 }

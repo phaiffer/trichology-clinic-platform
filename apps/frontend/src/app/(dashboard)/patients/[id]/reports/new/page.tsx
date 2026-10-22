@@ -33,16 +33,19 @@ export default async function NewPatientReportPage({
 
     return (
       <section className="space-y-6">
-        <div className="rounded-[2rem] border border-brand-100 bg-white p-8 shadow-sm">
-          <Link href={`/patients/${patient.id}`} className="text-sm font-medium text-brand-700">
-            Back to patient
+        <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm sm:p-8">
+          <Link
+            href={`/patients/${patient.id}`}
+            className="text-sm font-medium text-brand-700"
+          >
+            Voltar para o paciente
           </Link>
-          <h1 className="mt-3 text-3xl font-semibold text-brand-900">
-            Generate report
+          <h1 className="mt-3 text-2xl font-semibold text-brand-900 sm:text-3xl">
+            Gerar relatório
           </h1>
           <p className="mt-3 max-w-3xl text-slate-600">
-            Create the first downloadable clinical evaluation PDF from the local
-            patient record.
+            Emita um relatório de avaliação clínica em PDF consolidando o histórico do
+            paciente.
           </p>
         </div>
 
@@ -58,16 +61,21 @@ export default async function NewPatientReportPage({
     );
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Unable to load report generation flow";
+      error instanceof Error
+        ? error.message
+        : "Não foi possível carregar a geração de relatório";
 
     return (
       <section className="space-y-6">
-        <div className="rounded-[2rem] border border-brand-100 bg-white p-8 shadow-sm">
-          <Link href={`/patients/${params.id}`} className="text-sm font-medium text-brand-700">
-            Back to patient
+        <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm sm:p-8">
+          <Link
+            href={`/patients/${params.id}`}
+            className="text-sm font-medium text-brand-700"
+          >
+            Voltar para o paciente
           </Link>
-          <h1 className="mt-3 text-3xl font-semibold text-brand-900">
-            Report generation unavailable
+          <h1 className="mt-3 text-2xl font-semibold text-brand-900 sm:text-3xl">
+            Geração de relatório indisponível
           </h1>
           <p className="mt-3 text-sm text-red-700">{message}</p>
         </div>

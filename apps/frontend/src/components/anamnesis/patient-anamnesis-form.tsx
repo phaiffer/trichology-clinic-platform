@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPatientAnamnesisRecord } from "@/lib/api";
+import { formatQuestionType } from "@/lib/formatters";
 import {
   AnamnesisTemplate,
   PatientAnamnesisRecordInput,
@@ -45,7 +46,7 @@ export function PatientAnamnesisForm({
     event.preventDefault();
 
     if (!selectedTemplate) {
-      setError("Select an anamnesis template first.");
+      setError("Selecione um modelo de anamnese primeiro.");
       return;
     }
 
@@ -68,7 +69,7 @@ export function PatientAnamnesisForm({
       setError(
         submissionError instanceof Error
           ? submissionError.message
-          : "Unable to save anamnesis",
+          : "Não foi possível salvar a anamnese",
       );
     } finally {
       setIsSubmitting(false);
@@ -81,19 +82,19 @@ export function PatientAnamnesisForm({
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-brand-500">
-              Patient anamnesis
+              Anamnese do paciente
             </p>
             <h2 className="mt-2 text-2xl font-semibold text-brand-900">
               {patientName}
             </h2>
             <p className="mt-3 max-w-3xl text-slate-600">
-              Select a template and answer the dynamic clinical intake questions for
-              this patient.
+              Selecione um modelo e responda às perguntas clínicas estruturadas para
+              este paciente.
             </p>
           </div>
 
-          <label className="block min-w-72 space-y-2">
-            <span className="text-sm font-medium text-slate-700">Template</span>
+          <label className="block w-full space-y-2 md:max-w-xs">
+            <span className="text-sm font-medium text-slate-700">Modelo</span>
             <select
               value={selectedTemplateId}
               onChange={(event) => {
@@ -119,24 +120,30 @@ export function PatientAnamnesisForm({
               {selectedTemplate.name}
             </h3>
             <p className="mt-2 text-sm text-slate-600">
-              {selectedTemplate.description || "No template description provided."}
+              {selectedTemplate.description ||
+                "Sem descrição informada para este modelo."}
             </p>
           </div>
 
           <div className="mt-6 space-y-6">
             {selectedTemplate.questions.map((question) => (
-              <div key={question.id} className="space-y-2 rounded-3xl border border-brand-100 p-5">
-                <div className="flex items-start justify-between gap-4">
+              <div
+                key={question.id}
+                className="space-y-2 rounded-3xl border border-brand-100 p-5"
+              >
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <label className="text-sm font-semibold text-brand-900">
                       {question.displayOrder}. {question.label}
                     </label>
                     {question.helperText ? (
-                      <p className="mt-1 text-sm text-slate-500">{question.helperText}</p>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {question.helperText}
+                      </p>
                     ) : null}
                   </div>
-                  <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                    {question.type}
+                  <span className="self-start text-xs font-semibold uppercase tracking-[0.15em] text-slate-400">
+                    {formatQuestionType(question.type)}
                   </span>
                 </div>
 
@@ -152,8 +159,8 @@ export function PatientAnamnesisForm({
           </div>
         </section>
       ) : (
-        <section className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm text-sm text-slate-500">
-          No active templates available yet.
+        <section className="rounded-[2rem] border border-brand-100 bg-white p-6 text-sm text-slate-500 shadow-sm">
+          Nenhum modelo ativo disponível no momento.
         </section>
       )}
 
@@ -163,20 +170,20 @@ export function PatientAnamnesisForm({
         </div>
       ) : null}
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button
           type="submit"
           disabled={isSubmitting || !selectedTemplate}
           className="rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-900 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {isSubmitting ? "Saving anamnesis..." : "Save anamnesis"}
+          {isSubmitting ? "Salvando anamnese..." : "Salvar anamnese"}
         </button>
         <button
           type="button"
           onClick={() => router.back()}
           className="rounded-full border border-brand-100 px-5 py-3 text-sm font-semibold text-brand-700 transition hover:bg-brand-50"
         >
-          Cancel
+          Cancelar
         </button>
       </div>
     </form>
@@ -218,7 +225,9 @@ function renderQuestionField(type: QuestionType, props: FieldRendererProps) {
           type="number"
           value={typeof props.value === "number" ? String(props.value) : ""}
           onChange={(event) =>
-            props.onChange(event.target.value === "" ? null : Number(event.target.value))
+            props.onChange(
+              event.target.value === "" ? null : Number(event.target.value),
+            )
           }
           required={props.required}
           className="w-full rounded-2xl border border-brand-100 px-4 py-3 outline-none transition focus:border-brand-500"
@@ -236,7 +245,7 @@ function renderQuestionField(type: QuestionType, props: FieldRendererProps) {
       );
     case "BOOLEAN":
       return (
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           <label className="flex items-center gap-3 rounded-2xl bg-brand-50 px-4 py-3 text-sm text-slate-700">
             <input
               type="radio"
@@ -245,7 +254,7 @@ function renderQuestionField(type: QuestionType, props: FieldRendererProps) {
               onChange={() => props.onChange(true)}
               className="h-4 w-4 border-brand-200 text-brand-700 focus:ring-brand-500"
             />
-            Yes
+            Sim
           </label>
           <label className="flex items-center gap-3 rounded-2xl bg-brand-50 px-4 py-3 text-sm text-slate-700">
             <input
@@ -255,7 +264,7 @@ function renderQuestionField(type: QuestionType, props: FieldRendererProps) {
               onChange={() => props.onChange(false)}
               className="h-4 w-4 border-brand-200 text-brand-700 focus:ring-brand-500"
             />
-            No
+            Não
           </label>
         </div>
       );
@@ -263,7 +272,10 @@ function renderQuestionField(type: QuestionType, props: FieldRendererProps) {
       return (
         <div className="space-y-2">
           {props.options.map((option) => (
-            <label key={option} className="flex items-center gap-3 text-sm text-slate-700">
+            <label
+              key={option}
+              className="flex items-center gap-3 text-sm text-slate-700"
+            >
               <input
                 type="radio"
                 name={props.questionId}
@@ -285,7 +297,10 @@ function renderQuestionField(type: QuestionType, props: FieldRendererProps) {
             const checked = currentValue.includes(option);
 
             return (
-              <label key={option} className="flex items-center gap-3 text-sm text-slate-700">
+              <label
+                key={option}
+                className="flex items-center gap-3 text-sm text-slate-700"
+              >
                 <input
                   type="checkbox"
                   checked={checked}

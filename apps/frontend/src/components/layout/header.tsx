@@ -1,4 +1,5 @@
 import { LogoutButton } from "@/components/auth/logout-button";
+import { formatRole } from "@/lib/formatters";
 import { AuthenticatedUser } from "@/lib/types";
 
 type HeaderProps = {
@@ -6,18 +7,18 @@ type HeaderProps = {
 };
 
 export function Header({ currentUser }: HeaderProps) {
-  const primaryRole = currentUser.roles[0] ?? "UNKNOWN";
+  const primaryRole = formatRole(currentUser.roles[0]);
 
   return (
-    <header className="flex items-center justify-between border-b border-brand-100 bg-white px-6 py-4">
+    <header className="flex flex-col gap-3 border-b border-brand-100 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
       <div>
-        <p className="text-sm font-medium text-slate-500">Clinical Operations</p>
-        <h2 className="text-2xl font-semibold text-brand-900">
-          Trichology Dashboard
+        <p className="text-sm font-medium text-slate-500">Operações clínicas</p>
+        <h2 className="text-xl font-semibold text-brand-900 sm:text-2xl">
+          Painel de Tricologia
         </h2>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <div className="rounded-full border border-brand-100 bg-sand px-4 py-2 text-sm font-medium text-brand-700">
           {currentUser.fullName} • {primaryRole}
         </div>

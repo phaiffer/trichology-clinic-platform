@@ -9,7 +9,9 @@ type EditPatientPageProps = {
   };
 };
 
-function toPatientInput(patient: Awaited<ReturnType<typeof getServerPatient>>): PatientInput {
+function toPatientInput(
+  patient: Awaited<ReturnType<typeof getServerPatient>>,
+): PatientInput {
   return {
     firstName: patient.firstName,
     lastName: patient.lastName,
@@ -29,19 +31,19 @@ export default async function EditPatientPage({ params }: EditPatientPageProps) 
 
     return (
       <section className="space-y-6">
-        <div className="rounded-[2rem] border border-brand-100 bg-white p-8 shadow-sm">
+        <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm sm:p-8">
           <Link
             href={`/patients/${patient.id}`}
             className="text-sm font-medium text-brand-700"
           >
-            Back to details
+            Voltar para detalhes
           </Link>
-          <h1 className="mt-3 text-3xl font-semibold text-brand-900">
-            Edit patient
+          <h1 className="mt-3 text-2xl font-semibold text-brand-900 sm:text-3xl">
+            Editar paciente
           </h1>
           <p className="mt-3 max-w-2xl text-slate-600">
-            Update the core patient record while keeping the current consent and
-            contact data consistent.
+            Atualize os dados cadastrais do paciente mantendo o histórico clínico e o
+            consentimento consistentes.
           </p>
         </div>
 
@@ -54,16 +56,16 @@ export default async function EditPatientPage({ params }: EditPatientPageProps) 
     );
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Unable to load patient";
+      error instanceof Error ? error.message : "Não foi possível carregar o paciente";
 
     return (
       <section className="space-y-6">
-        <div className="rounded-[2rem] border border-brand-100 bg-white p-8 shadow-sm">
+        <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm sm:p-8">
           <Link href="/patients" className="text-sm font-medium text-brand-700">
-            Back to patients
+            Voltar para pacientes
           </Link>
-          <h1 className="mt-3 text-3xl font-semibold text-brand-900">
-            Patient not available
+          <h1 className="mt-3 text-2xl font-semibold text-brand-900 sm:text-3xl">
+            Paciente indisponível
           </h1>
           <p className="mt-3 text-sm text-red-700">{message}</p>
         </div>

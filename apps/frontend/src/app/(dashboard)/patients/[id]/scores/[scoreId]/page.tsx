@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { requireAnyRole } from "@/lib/auth";
+import {
+  formatDateTime,
+  formatDecimal,
+  formatQuestionType,
+  formatScoreAnswerValue,
+  formatScoreClassification,
+  formatScoreRuleApplied,
+  formatScoreSummary,
+} from "@/lib/formatters";
 import { getServerPatientScoreResult } from "@/lib/server-api";
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
 
 export default async function PatientScoreDetailsPage({
   params,
@@ -21,73 +23,84 @@ export default async function PatientScoreDetailsPage({
 
     return (
       <section className="space-y-6">
-        <div className="rounded-[2rem] border border-brand-100 bg-white p-8 shadow-sm">
-          <Link href={`/patients/${params.id}`} className="text-sm font-medium text-brand-700">
-            Back to patient
+        <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm sm:p-8">
+          <Link
+            href={`/patients/${params.id}`}
+            className="text-sm font-medium text-brand-700"
+          >
+            Voltar para o paciente
           </Link>
           <p className="mt-4 text-sm font-semibold uppercase tracking-[0.3em] text-brand-500">
-            Score result
+            Resultado da pontuação
           </p>
-          <h1 className="mt-2 text-3xl font-semibold text-brand-900">
-            {score.anamnesisTemplateName || "Legacy score"}
+          <h1 className="mt-2 text-2xl font-semibold text-brand-900 sm:text-3xl">
+            {score.anamnesisTemplateName || "Pontuação clínica"}
           </h1>
           <p className="mt-3 max-w-3xl text-slate-600">
-            Stored scoring result for {score.patientName}
+            Resultado de pontuação armazenado para {score.patientName}
             {score.anamnesisRecordId
-              ? `, calculated from anamnesis record ${score.anamnesisRecordId}.`
+              ? ", calculado a partir do registro de anamnese vinculado."
               : "."}
           </p>
         </div>
 
-        <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-          <div className="space-y-6">
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+          <div className="min-w-0 space-y-6">
             <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-brand-900">Overview</h2>
+              <h2 className="text-lg font-semibold text-brand-900">Visão geral</h2>
               <dl className="mt-6 grid gap-4 md:grid-cols-2">
-                <InfoItem label="Patient" value={score.patientName} />
+                <InfoItem label="Paciente" value={score.patientName} />
                 <InfoItem
-                  label="Classification"
-                  value={score.classification || "UNCLASSIFIED"}
+                  label="Classificação"
+                  value={formatScoreClassification(score.classification)}
                 />
-                <InfoItem label="Total score" value={score.totalScore.toFixed(2)} />
-                <InfoItem label="Calculated at" value={formatDate(score.calculatedAt)} />
+                <InfoItem
+                  label="Pontuação total"
+                  value={formatDecimal(score.totalScore)}
+                />
+                <InfoItem
+                  label="Calculada em"
+                  value={formatDateTime(score.calculatedAt)}
+                />
               </dl>
 
               <div className="mt-6 rounded-2xl bg-sand px-4 py-4">
-                <p className="text-sm font-medium text-slate-700">Summary</p>
+                <p className="text-sm font-medium text-slate-700">Resumo</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {score.summary || "No summary stored for this score result."}
+                  {formatScoreSummary(score.summary)}
                 </p>
               </div>
             </div>
 
             <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-brand-900">Links</h2>
+              <h2 className="text-lg font-semibold text-brand-900">Ações rápidas</h2>
               <div className="mt-4 flex flex-col gap-3">
                 {score.anamnesisRecordId ? (
                   <Link
                     href={`/patients/${params.id}/anamnesis/${score.anamnesisRecordId}`}
                     className="text-sm font-medium text-brand-700 transition hover:text-brand-900"
                   >
-                    Open source anamnesis record
+                    Abrir registro de anamnese de origem
                   </Link>
                 ) : null}
                 <Link
                   href={`/patients/${params.id}/reports/new`}
                   className="text-sm font-medium text-brand-700 transition hover:text-brand-900"
                 >
-                  Use this score in a report
+                  Utilizar esta pontuação em um relatório
                 </Link>
               </div>
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-brand-900">Itemized contributions</h2>
+          <div className="min-w-0 rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-brand-900">
+              Contribuição por resposta
+            </h2>
 
             {score.items.length === 0 ? (
               <p className="mt-4 text-sm text-slate-500">
-                No itemized contributions were stored for this score result.
+                Nenhuma contribuição detalhada foi armazenada para este resultado.
               </p>
             ) : (
               <div className="mt-6 space-y-4">
@@ -101,18 +114,23 @@ export default async function PatientScoreDetailsPage({
                         <h3 className="text-sm font-semibold text-brand-900">
                           {item.questionLabel}
                         </h3>
-                        <p className="mt-1 text-sm text-slate-500">{item.questionType}</p>
+                        <p className="mt-1 text-sm text-slate-500">
+                          {formatQuestionType(item.questionType)}
+                        </p>
                       </div>
-                      <div className="rounded-full bg-brand-50 px-4 py-2 text-sm font-semibold text-brand-700">
-                        +{item.contribution.toFixed(2)}
+                      <div className="self-start rounded-full bg-brand-50 px-4 py-2 text-sm font-semibold text-brand-700">
+                        +{formatDecimal(item.contribution)}
                       </div>
                     </div>
 
                     <p className="mt-4 text-sm text-slate-700">
-                      Answer: {item.answerValue || "-"}
+                      Resposta:{" "}
+                      <span className="font-medium text-brand-900">
+                        {formatScoreAnswerValue(item.answerValue, item.questionType)}
+                      </span>
                     </p>
                     <p className="mt-2 text-sm leading-6 text-slate-600">
-                      {item.ruleApplied}
+                      {formatScoreRuleApplied(item.ruleApplied)}
                     </p>
                   </article>
                 ))}
@@ -124,15 +142,20 @@ export default async function PatientScoreDetailsPage({
     );
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Unable to load score result";
+      error instanceof Error
+        ? error.message
+        : "Não foi possível carregar o resultado da pontuação";
 
     return (
-      <section className="rounded-[2rem] border border-brand-100 bg-white p-8 shadow-sm">
-        <Link href={`/patients/${params.id}`} className="text-sm font-medium text-brand-700">
-          Back to patient
+      <section className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm sm:p-8">
+        <Link
+          href={`/patients/${params.id}`}
+          className="text-sm font-medium text-brand-700"
+        >
+          Voltar para o paciente
         </Link>
-        <h1 className="mt-3 text-3xl font-semibold text-brand-900">
-          Score result not available
+        <h1 className="mt-3 text-2xl font-semibold text-brand-900 sm:text-3xl">
+          Resultado de pontuação indisponível
         </h1>
         <p className="mt-3 text-sm text-red-700">{message}</p>
       </section>
@@ -147,9 +170,9 @@ type InfoItemProps = {
 
 function InfoItem({ label, value }: InfoItemProps) {
   return (
-    <div>
+    <div className="min-w-0">
       <dt className="text-sm font-medium text-slate-500">{label}</dt>
-      <dd className="mt-1 text-sm text-slate-800">{value}</dd>
+      <dd className="mt-1 break-words text-sm text-slate-800">{value}</dd>
     </div>
   );
 }

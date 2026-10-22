@@ -33,7 +33,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.NumberFormat;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedHashMap;
@@ -47,6 +51,8 @@ import java.util.regex.Pattern;
 public class ReportService {
 
     private static final Pattern UNSAFE_FILE_NAME_CHARS = Pattern.compile("[^a-zA-Z0-9._-]");
+    private static final Locale PT_BR = Locale.forLanguageTag("pt-BR");
+    private static final DateTimeFormatter BR_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy", PT_BR);
 
     private final PatientRepository patientRepository;
     private final AnamnesisRecordRepository anamnesisRecordRepository;
@@ -280,13 +286,29 @@ public class ReportService {
     private ClinicalEvaluationPdfAnswerData toAnswerData(AnamnesisAnswer answer) {
         return new ClinicalEvaluationPdfAnswerData(
                 answer.resolveQuestionLabel(),
-                formatAnswerValue(answer.getAnswerValue())
+                formatAnswerValue(answer)
         );
     }
 
-    private String formatAnswerValue(String serializedValue) {
+    private String formatAnswerValue(AnamnesisAnswer answer) {
+        String serializedValue = answer.getAnswerValue();
         try {
             Object value = objectMapper.readValue(serializedValue, Object.class);
+
+            if (value == null) {
+                return "-";
+            }
+
+            if (value instanceof Boolean booleanValue) {
+                return booleanValue ? "Sim" : "Não";
+            }
+
+            if (value instanceof Number numberValue) {
+                NumberFormat numberFormat = NumberFormat.getNumberInstance(PT_BR);
+                numberFormat.setGroupingUsed(false);
+                numberFormat.setMaximumFractionDigits(2);
+                return numberFormat.format(numberValue.doubleValue());
+            }
 
             if (value instanceof List<?> listValue) {
                 return listValue.stream()
@@ -295,7 +317,24 @@ public class ReportService {
                         .orElse("-");
             }
 
-            return value == null ? "-" : String.valueOf(value);
+            if (value instanceof String stringValue) {
+                if ("true".equalsIgnoreCase(stringValue.trim())) {
+                    return "Sim";
+                }
+                if ("false".equalsIgnoreCase(stringValue.trim())) {
+                    return "Não";
+                }
+                if (stringValue.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                    try {
+                        return BR_DATE_FORMATTER.format(LocalDate.parse(stringValue));
+                    } catch (DateTimeParseException ignored) {
+                        return stringValue;
+                    }
+                }
+                return stringValue.isBlank() ? "-" : stringValue;
+            }
+
+            return String.valueOf(value);
         } catch (IOException exception) {
             return serializedValue;
         }

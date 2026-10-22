@@ -53,15 +53,18 @@ export function PatientForm({
         submissionError instanceof Error
           ? submissionError.message
           : mode === "edit"
-            ? "Unable to update patient"
-            : "Unable to create patient",
+            ? "Não foi possível atualizar o paciente"
+            : "Não foi possível cadastrar o paciente",
       );
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  function updateField<K extends keyof PatientInput>(key: K, value: PatientInput[K]) {
+  function updateField<K extends keyof PatientInput>(
+    key: K,
+    value: PatientInput[K],
+  ) {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
@@ -72,49 +75,61 @@ export function PatientForm({
     >
       <div className="grid gap-4 md:grid-cols-2">
         <Field
-          label="First name"
+          label="Nome"
           value={form.firstName}
           onChange={(value) => updateField("firstName", value)}
           required
         />
         <Field
-          label="Last name"
+          label="Sobrenome"
           value={form.lastName}
           onChange={(value) => updateField("lastName", value)}
           required
         />
         <Field
-          label="Email"
+          label="E-mail"
           type="email"
           value={form.email}
           onChange={(value) => updateField("email", value)}
           required
         />
         <Field
-          label="Phone"
+          label="Telefone"
           value={form.phone ?? ""}
           onChange={(value) => updateField("phone", value || null)}
         />
         <Field
-          label="Birth date"
+          label="Data de nascimento"
           type="date"
           value={form.birthDate ?? ""}
           onChange={(value) => updateField("birthDate", value || null)}
         />
-        <Field
-          label="Gender"
-          value={form.gender ?? ""}
-          onChange={(value) => updateField("gender", value || null)}
-        />
+        <label className="block space-y-2">
+          <span className="text-sm font-medium text-slate-700">Gênero</span>
+          <select
+            value={form.gender ?? ""}
+            onChange={(event) => updateField("gender", event.target.value || null)}
+            className="w-full rounded-2xl border border-brand-100 px-4 py-3 outline-none ring-0 transition focus:border-brand-500"
+          >
+            <option value="">Não informado</option>
+            <option value="FEMALE">Feminino</option>
+            <option value="MALE">Masculino</option>
+            <option value="NON_BINARY">Não binário</option>
+            <option value="OTHER">Outro</option>
+            <option value="PREFER_NOT_TO_SAY">Prefiro não informar</option>
+          </select>
+        </label>
       </div>
 
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-slate-700">Clinical notes</span>
+        <span className="text-sm font-medium text-slate-700">
+          Observações clínicas
+        </span>
         <textarea
           value={form.notes ?? ""}
           onChange={(event) => updateField("notes", event.target.value || null)}
           className="min-h-28 w-full rounded-2xl border border-brand-100 px-4 py-3 outline-none ring-0 transition focus:border-brand-500"
-          placeholder="Relevant clinical observations"
+          placeholder="Observações clínicas relevantes sobre o paciente"
         />
       </label>
 
@@ -123,11 +138,13 @@ export function PatientForm({
           <input
             type="checkbox"
             checked={form.consentAccepted}
-            onChange={(event) => updateField("consentAccepted", event.target.checked)}
+            onChange={(event) =>
+              updateField("consentAccepted", event.target.checked)
+            }
             className="h-4 w-4 rounded border-brand-200 text-brand-700 focus:ring-brand-500"
             required
           />
-          LGPD consent collected for patient registration and communication.
+          Consentimento LGPD coletado para cadastro e acompanhamento clínico.
         </label>
 
         <label className="flex items-center gap-3 rounded-2xl border border-brand-100 px-4 py-3 text-sm text-slate-700">
@@ -137,7 +154,7 @@ export function PatientForm({
             onChange={(event) => updateField("active", event.target.checked)}
             className="h-4 w-4 rounded border-brand-200 text-brand-700 focus:ring-brand-500"
           />
-          Patient is active
+          Paciente ativo
         </label>
       </div>
 
@@ -147,7 +164,7 @@ export function PatientForm({
         </div>
       ) : null}
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button
           type="submit"
           disabled={isSubmitting}
@@ -155,11 +172,11 @@ export function PatientForm({
         >
           {isSubmitting
             ? mode === "edit"
-              ? "Saving changes..."
-              : "Saving..."
+              ? "Salvando alterações..."
+              : "Salvando..."
             : mode === "edit"
-              ? "Save changes"
-              : "Create patient"}
+              ? "Salvar alterações"
+              : "Cadastrar paciente"}
         </button>
 
         <button
@@ -167,7 +184,7 @@ export function PatientForm({
           onClick={() => router.back()}
           className="rounded-full border border-brand-100 px-5 py-3 text-sm font-semibold text-brand-700 transition hover:bg-brand-50"
         >
-          Cancel
+          Cancelar
         </button>
       </div>
     </form>
@@ -182,7 +199,13 @@ type FieldProps = {
   required?: boolean;
 };
 
-function Field({ label, value, onChange, type = "text", required = false }: FieldProps) {
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+  required = false,
+}: FieldProps) {
   return (
     <label className="block space-y-2">
       <span className="text-sm font-medium text-slate-700">{label}</span>
@@ -196,4 +219,3 @@ function Field({ label, value, onChange, type = "text", required = false }: Fiel
     </label>
   );
 }
-

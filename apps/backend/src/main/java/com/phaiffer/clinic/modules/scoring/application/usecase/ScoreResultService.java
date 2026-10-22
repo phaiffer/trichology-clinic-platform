@@ -166,8 +166,12 @@ public class ScoreResultService {
                 answer,
                 optionValue,
                 contribution,
-                "SINGLE_CHOICE option score %.2f multiplied by question weight %.2f"
-                        .formatted(optionScore, multiplier)
+                String.format(
+                        Locale.ROOT,
+                        "SINGLE_CHOICE option score %.2f multiplied by question weight %.2f",
+                        optionScore,
+                        multiplier
+                )
         );
     }
 
@@ -198,8 +202,12 @@ public class ScoreResultService {
                 answer,
                 String.join(", ", selectedOptions),
                 contribution,
-                "MULTIPLE_CHOICE option score sum %.2f multiplied by question weight %.2f"
-                        .formatted(baseScore, multiplier)
+                String.format(
+                        Locale.ROOT,
+                        "MULTIPLE_CHOICE option score sum %.2f multiplied by question weight %.2f",
+                        baseScore,
+                        multiplier
+                )
         );
     }
 
@@ -215,8 +223,12 @@ public class ScoreResultService {
                 answer,
                 formatNumber(numericValue),
                 contribution,
-                "NUMBER answer %.2f multiplied by question weight %.2f"
-                        .formatted(numericValue, scoringWeight)
+                String.format(
+                        Locale.ROOT,
+                        "NUMBER answer %.2f multiplied by question weight %.2f",
+                        numericValue,
+                        scoringWeight
+                )
         );
     }
 
@@ -255,18 +267,21 @@ public class ScoreResultService {
 
         String highestContribution = highestItem == null
                 ? "No contributing question details were stored."
-                : "Highest contribution: %s (%.2f).".formatted(
-                highestItem.getQuestionLabel(),
-                highestItem.getContribution()
-        );
-
-        return "Calculated from %d scored answers in template %s. %s Classification: %s."
-                .formatted(
-                        calculation.items().size(),
-                        record.resolveTemplateName(),
-                        highestContribution,
-                        classificationFor(calculation.totalScore()).name()
+                : String.format(
+                        Locale.ROOT,
+                        "Highest contribution: %s (%.2f).",
+                        highestItem.getQuestionLabel(),
+                        highestItem.getContribution()
                 );
+
+        return String.format(
+                Locale.ROOT,
+                "Calculated from %d scored answers in template %s. %s Classification: %s.",
+                calculation.items().size(),
+                record.resolveTemplateName(),
+                highestContribution,
+                classificationFor(calculation.totalScore()).name()
+        );
     }
 
     private Object deserializeAnswer(String serializedValue) {
@@ -278,7 +293,7 @@ public class ScoreResultService {
     }
 
     private String formatNumber(double value) {
-        return String.format(Locale.US, "%.2f", value);
+        return String.format(Locale.ROOT, "%.2f", value);
     }
 
     private double round(double value) {

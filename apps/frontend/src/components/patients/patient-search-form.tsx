@@ -9,7 +9,7 @@ export function PatientSearchForm({ defaultValue }: PatientSearchFormProps) {
         type="search"
         name="search"
         defaultValue={defaultValue}
-        placeholder="Search by patient name"
+        placeholder="Buscar por nome do paciente"
         className="w-full rounded-2xl border border-brand-100 px-4 py-3 text-sm outline-none transition focus:border-brand-500 md:max-w-md"
       />
       <input type="hidden" name="page" value="0" />
@@ -18,9 +18,8 @@ export function PatientSearchForm({ defaultValue }: PatientSearchFormProps) {
         type="submit"
         className="rounded-full bg-brand-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-900"
       >
-        Search
+        Buscar
       </button>
     </form>
   );
 }
-

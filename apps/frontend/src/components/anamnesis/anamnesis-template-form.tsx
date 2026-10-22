@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createAnamnesisTemplate, updateAnamnesisTemplate } from "@/lib/api";
+import { formatQuestionType } from "@/lib/formatters";
 import {
   AnamnesisQuestion,
   AnamnesisQuestionInput,
@@ -150,8 +151,8 @@ export function AnamnesisTemplateForm({
         submissionError instanceof Error
           ? submissionError.message
           : mode === "edit"
-            ? "Unable to update anamnesis template"
-            : "Unable to create anamnesis template",
+            ? "Não foi possível atualizar o modelo de anamnese"
+            : "Não foi possível criar o modelo de anamnese",
       );
     } finally {
       setIsSubmitting(false);
@@ -162,15 +163,16 @@ export function AnamnesisTemplateForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       {mode === "edit" ? (
         <section className="rounded-[2rem] border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
-          Template edits affect future anamnesis submissions only. Existing patient
-          answers, stored score results, and generated reports remain historically stable.
+          Os registros de anamnese já preenchidos preservam os enunciados e os pesos
+          vigentes no momento do atendimento, mantendo a integridade das pontuações e
+          dos relatórios emitidos.
         </section>
       ) : null}
 
       <section className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
         <div className="grid gap-4 md:grid-cols-2">
           <Field
-            label="Template name"
+            label="Nome do modelo"
             value={form.name}
             onChange={(value) => setForm((current) => ({ ...current, name: value }))}
             required
@@ -185,12 +187,12 @@ export function AnamnesisTemplateForm({
               }
               className="h-4 w-4 rounded border-brand-200 text-brand-700 focus:ring-brand-500"
             />
-            Template is active
+            Modelo ativo
           </label>
         </div>
 
         <label className="mt-4 block space-y-2">
-          <span className="text-sm font-medium text-slate-700">Description</span>
+          <span className="text-sm font-medium text-slate-700">Descrição</span>
           <textarea
             value={form.description ?? ""}
             onChange={(event) =>
@@ -200,27 +202,27 @@ export function AnamnesisTemplateForm({
               }))
             }
             className="min-h-24 w-full rounded-2xl border border-brand-100 px-4 py-3 outline-none transition focus:border-brand-500"
-            placeholder="Clinical purpose of this template"
+            placeholder="Objetivo clínico deste modelo de anamnese"
           />
         </label>
       </section>
 
       <section className="rounded-[2rem] border border-brand-100 bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-brand-900">Questions</h2>
+            <h2 className="text-lg font-semibold text-brand-900">Perguntas</h2>
             <p className="mt-2 text-sm text-slate-600">
-              Update the ordered questionnaire that will be used for future patient
-              anamnesis submissions.
+              Estruture o questionário ordenado que será apresentado no preenchimento
+              da anamnese.
             </p>
           </div>
 
           <button
             type="button"
             onClick={addQuestion}
-            className="rounded-full border border-brand-100 px-4 py-2 text-sm font-semibold text-brand-700 transition hover:bg-brand-50"
+            className="self-start rounded-full border border-brand-100 px-4 py-2 text-sm font-semibold text-brand-700 transition hover:bg-brand-50 sm:self-auto"
           >
-            Add question
+            Adicionar pergunta
           </button>
         </div>
 
@@ -237,12 +239,12 @@ export function AnamnesisTemplateForm({
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-500">
-                      Question {index + 1}
+                      Pergunta {index + 1}
                     </p>
                     {question.id ? (
-                      <p className="mt-1 text-xs text-slate-400">Existing question</p>
+                      <p className="mt-1 text-xs text-slate-400">Pergunta existente</p>
                     ) : (
-                      <p className="mt-1 text-xs text-slate-400">New question</p>
+                      <p className="mt-1 text-xs text-slate-400">Nova pergunta</p>
                     )}
                   </div>
 
@@ -252,14 +254,14 @@ export function AnamnesisTemplateForm({
                       onClick={() => removeQuestion(index)}
                       className="text-sm font-medium text-red-700"
                     >
-                      Remove
+                      Remover
                     </button>
                   ) : null}
                 </div>
 
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                   <Field
-                    label="Label"
+                    label="Enunciado"
                     value={question.label}
                     onChange={(value) =>
                       updateQuestion(index, (current) => ({ ...current, label: value }))
@@ -268,7 +270,7 @@ export function AnamnesisTemplateForm({
                   />
 
                   <label className="block space-y-2">
-                    <span className="text-sm font-medium text-slate-700">Type</span>
+                    <span className="text-sm font-medium text-slate-700">Tipo</span>
                     <select
                       value={question.type}
                       onChange={(event) =>
@@ -291,14 +293,14 @@ export function AnamnesisTemplateForm({
                     >
                       {questionTypes.map((type) => (
                         <option key={type} value={type}>
-                          {type}
+                          {formatQuestionType(type)}
                         </option>
                       ))}
                     </select>
                   </label>
 
                   <Field
-                    label="Helper text"
+                    label="Texto de apoio"
                     value={question.helperText ?? ""}
                     onChange={(value) =>
                       updateQuestion(index, (current) => ({
@@ -309,7 +311,7 @@ export function AnamnesisTemplateForm({
                   />
 
                   <Field
-                    label="Order"
+                    label="Ordem de exibição"
                     type="number"
                     value={String(question.displayOrder)}
                     onChange={(value) =>
@@ -335,11 +337,11 @@ export function AnamnesisTemplateForm({
                       }
                       className="h-4 w-4 rounded border-brand-200 text-brand-700 focus:ring-brand-500"
                     />
-                    Required question
+                    Pergunta obrigatória
                   </label>
 
                   <Field
-                    label="Scoring weight"
+                    label="Peso na pontuação"
                     type="number"
                     value={question.scoringWeight?.toString() ?? ""}
                     onChange={(value) =>
@@ -354,7 +356,7 @@ export function AnamnesisTemplateForm({
                 {choiceType ? (
                   <label className="mt-4 block space-y-2">
                     <span className="text-sm font-medium text-slate-700">
-                      Options, one per line
+                      Opções (uma por linha)
                     </span>
                     <textarea
                       value={question.options.join("\n")}
@@ -378,14 +380,16 @@ export function AnamnesisTemplateForm({
                         })
                       }
                       className="min-h-24 w-full rounded-2xl border border-brand-100 px-4 py-3 outline-none transition focus:border-brand-500"
-                      placeholder={"Option A\nOption B"}
+                      placeholder={"Opção A\nOpção B"}
                     />
                   </label>
                 ) : null}
 
                 {choiceType && question.options.length > 0 ? (
                   <div className="mt-4 space-y-3">
-                    <p className="text-sm font-medium text-slate-700">Option scores</p>
+                    <p className="text-sm font-medium text-slate-700">
+                      Pontuação por opção
+                    </p>
                     <div className="grid gap-3 md:grid-cols-2">
                       {question.options.map((option) => (
                         <label key={option} className="block space-y-2">
@@ -424,7 +428,7 @@ export function AnamnesisTemplateForm({
         </div>
       ) : null}
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button
           type="submit"
           disabled={isSubmitting}
@@ -432,18 +436,18 @@ export function AnamnesisTemplateForm({
         >
           {isSubmitting
             ? mode === "edit"
-              ? "Saving template..."
-              : "Creating template..."
+              ? "Salvando modelo..."
+              : "Criando modelo..."
             : mode === "edit"
-              ? "Save changes"
-              : "Create template"}
+              ? "Salvar alterações"
+              : "Criar modelo"}
         </button>
         <button
           type="button"
           onClick={() => router.back()}
           className="rounded-full border border-brand-100 px-5 py-3 text-sm font-semibold text-brand-700 transition hover:bg-brand-50"
         >
-          Cancel
+          Cancelar
         </button>
       </div>
     </form>
@@ -458,7 +462,13 @@ type FieldProps = {
   type?: string;
 };
 
-function Field({ label, value, onChange, required = false, type = "text" }: FieldProps) {
+function Field({
+  label,
+  value,
+  onChange,
+  required = false,
+  type = "text",
+}: FieldProps) {
   return (
     <label className="block space-y-2">
       <span className="text-sm font-medium text-slate-700">{label}</span>

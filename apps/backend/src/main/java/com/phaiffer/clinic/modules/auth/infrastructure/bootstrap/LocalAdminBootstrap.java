@@ -77,6 +77,6 @@ public class LocalAdminBootstrap implements ApplicationRunner {
 
     private String normalizeFullName(String value) {
         String normalized = value == null ? "" : value.trim();
-        return normalized.isBlank() ? "Local Administrator" : normalized;
+        return normalized.isBlank() ? "Profissional de demonstração" : normalized;
     }
 }

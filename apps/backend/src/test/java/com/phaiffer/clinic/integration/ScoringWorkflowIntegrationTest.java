@@ -8,6 +8,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -182,5 +183,49 @@ class ScoringWorkflowIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(post("/api/patients/{patientId}/anamnesis-records/{recordId}/scores", secondPatientId, uuid(record, "id")))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Patient anamnesis record not found: " + record.get("id").asText()));
+    }
+
+    @Test
+    void shouldFormatRuleAppliedWithDotDecimalSeparatorEvenWhenDefaultLocaleIsPtBr() throws Exception {
+        Locale originalLocale = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("pt-BR"));
+
+            JsonNode patient = createPatient("score-locale-pt-br");
+            JsonNode template = createTemplate("Locale Template");
+            UUID patientId = uuid(patient, "id");
+            UUID templateId = uuid(template, "id");
+
+            UUID firstQuestionId = UUID.fromString(template.get("questions").get(0).get("id").asText());
+            UUID secondQuestionId = UUID.fromString(template.get("questions").get(1).get("id").asText());
+            UUID thirdQuestionId = UUID.fromString(template.get("questions").get(2).get("id").asText());
+            UUID fourthQuestionId = UUID.fromString(template.get("questions").get(3).get("id").asText());
+
+            JsonNode record = createRecord(
+                    patientId,
+                    templateId,
+                    List.of(
+                            answer(firstQuestionId, "High"),
+                            answer(secondQuestionId, true),
+                            answer(thirdQuestionId, List.of("Frontal", "Crown")),
+                            answer(fourthQuestionId, 8)
+                    )
+            );
+
+            JsonNode createdScore = calculateScore(patientId, uuid(record, "id"));
+
+            assertThat(createdScore.get("items").get(0).get("ruleApplied").asText())
+                    .isEqualTo("SINGLE_CHOICE option score 4.00 multiplied by question weight 1.50");
+            assertThat(createdScore.get("items").get(1).get("ruleApplied").asText())
+                    .isEqualTo("BOOLEAN answer matched the configured question weight");
+            assertThat(createdScore.get("items").get(2).get("ruleApplied").asText())
+                    .isEqualTo("MULTIPLE_CHOICE option score sum 5.00 multiplied by question weight 1.00");
+            assertThat(createdScore.get("items").get(3).get("ruleApplied").asText())
+                    .isEqualTo("NUMBER answer 8.00 multiplied by question weight 0.50");
+            assertThat(createdScore.get("summary").asText())
+                    .contains("(6.00)");
+        } finally {
+            Locale.setDefault(originalLocale);
+        }
     }
 }
